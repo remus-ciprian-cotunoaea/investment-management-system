@@ -1,4 +1,4 @@
-\# System Context Diagram (C1)
+# System Context Diagram (C1)
 
 
 
@@ -8,17 +8,17 @@ and how it interacts with external actors.
 
 
 
-\## External Actors
+## External Actors
 
-\- \*\*Investor/User\*\* → places orders, views portfolio, receives trade reports.
+- \*\*Investor/User\*\* → places orders, views portfolio, receives trade reports.
 
-\- \*\*Market Data Provider\*\* → provides quotes, FX rates, and instrument data.
+- \*\*Market Data Provider\*\* → provides quotes, FX rates, and instrument data.
 
-\- \*\*Banking/Payment System\*\* → handles settlements, deposits, withdrawals, and cash confirmations.
+- \*\*Banking/Payment System\*\* → handles settlements, deposits, withdrawals, and cash confirmations.
 
 
 
-\## Diagram
+## Diagram
 
-!\[C1 Diagram](C1-Investment-Management-System.png)
+![C1 Diagram](C1-Investment-Management-System.png)
 
