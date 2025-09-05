@@ -1,16 +1,8 @@
-\# Documentation
-
-
-
-\## Database Diagrams
-
-
-
 \### Chen Notation
 
 !\[ERD Chen](diagrams/db/ERD-chen.png)  
 
-➡️ \[Download PDF](diagrams/db/Entity-Relationship%20Diagram%20(Chen).pdf)
+\[➡️ Download PDF](diagrams/db/Entity-Relationship%20Diagram%20(Chen).pdf)
 
 
 
@@ -18,5 +10,7 @@
 
 !\[ERD Crow's Foot](diagrams/db/ERD-crows-foot.png)  
 
-➡️ \[Download PDF](diagrams/db/Entity-Relationship%20Diagram%20(Crow's%20Foot).pdf)
+\[➡️ Download PDF](diagrams/db/Entity-Relationship%20Diagram%20(Crow's%20Foot).pdf)
+
+
 
