@@ -20,7 +20,5 @@ and how it interacts with external actors.
 
 \## Diagram
 
-!\[C1 Diagram](https://raw.githubusercontent.com/remus-ciprian-cotunoaea/investment-management-system/main/docs/diagrams/c1/C1-Investment-Management-System.png)
-
-
+!\[C1 Diagram](C1-Investment-Management-System.png)
 
