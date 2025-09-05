@@ -2,7 +2,7 @@
 
 
 
-This diagram shows the high-level context of the \*\*Investment Management System (IMS)\*\*  
+This diagram shows the high-level context of the \*\*Investment Management System (IMS)\*\*
 
 and how it interacts with external actors.
 
@@ -20,7 +20,5 @@ and how it interacts with external actors.
 
 \## Diagram
 
-!\[C1 Diagram](C1-Investment-Management-System.png)
-
-
+!\[C1 Diagram](./C1-Investment-Management-System.png)
 
