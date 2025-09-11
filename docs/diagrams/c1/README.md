@@ -20,5 +20,5 @@ and how it interacts with external actors.
 
 ## Diagram
 
-![C1 Diagram](C1-Investment-Management-System.png)
+![C1 Diagram](C1-Investment_Management_System.png)
 
