@@ -32,5 +32,5 @@ Thumbs.db
 # =========================
 # YML de configuración sensible
 # =========================
-src/main/resources/application-local.yml
-src/main/resources/application-prod.yml
+/microservices/portfolios-ms/src/main/resources/application-local.yml
+/microservices/portfolios-ms/src/main/resources/application-prod.yml
