@@ -1,0 +1,6 @@
+D:\PROJECT_INVESTMENTS\LIBRARIES\exceptions-lib\src\main\java\com\investment\common\dto\ApiErrorDto.java
+D:\PROJECT_INVESTMENTS\LIBRARIES\exceptions-lib\src\main\java\com\investment\common\exception\BadRequestException.java
+D:\PROJECT_INVESTMENTS\LIBRARIES\exceptions-lib\src\main\java\com\investment\common\exception\BusinessException.java
+D:\PROJECT_INVESTMENTS\LIBRARIES\exceptions-lib\src\main\java\com\investment\common\exception\ForbiddenException.java
+D:\PROJECT_INVESTMENTS\LIBRARIES\exceptions-lib\src\main\java\com\investment\common\exception\NotFoundException.java
+D:\PROJECT_INVESTMENTS\LIBRARIES\exceptions-lib\src\main\java\com\investment\common\exception\UnauthorizedException.java

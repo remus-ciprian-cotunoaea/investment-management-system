@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: portfolios-ms
+
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        default_schema: portfolios   # <- si vas a usar schema "portfolios"
+    hibernate:
+      ddl-auto: validate             # default seguro
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when_authorized
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html

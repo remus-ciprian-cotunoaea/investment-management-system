@@ -1,0 +1,24 @@
+# ========================
+# IntelliJ IDEA
+# ========================
+/shelf/
+/workspace.xml
+/httpRequests/
+/dataSources/
+/dataSources.local.xml
+.idea/
+*.iml
+
+# ========================
+# Maven / Build
+# ========================
+target/
+out/
+*.class
+*.log
+
+# ========================
+# OS Files
+# ========================
+.DS_Store
+Thumbs.db
