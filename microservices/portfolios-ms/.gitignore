@@ -1,33 +1,36 @@
-HELP.md
+# =========================
+# Maven / Spring Boot
+# =========================
 target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+!.mvn/wrapper/maven-wrapper.jar
+**/logs/
+!src/main/**/logs/
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
+# =========================
+# IntelliJ IDEA / JetBrains
+# =========================
+.idea/
 *.iml
+out/
 *.ipr
+*.iws
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
+# =========================
+# Eclipse / STS
+# =========================
+.project
+.classpath
+.settings/
+.springBeans
 
-### VS Code ###
-.vscode/
+# =========================
+# OS / System
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# YML de configuración sensible
+# =========================
+src/main/resources/application-local.yml
+src/main/resources/application-prod.yml
