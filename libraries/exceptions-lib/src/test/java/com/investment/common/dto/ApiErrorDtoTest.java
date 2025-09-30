@@ -2,7 +2,9 @@ package com.investment.common.dto;
 
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -29,11 +31,14 @@ class ApiErrorDtoTest {
 
     @Test
     void equalsAndHashCodeWork() {
+
+        Instant fixed = Instant.parse("2025-01-01T10:00:00Z");
+        LocalDateTime ts = LocalDateTime.ofInstant(fixed, ZoneOffset.UTC);
         ApiErrorDto a = ApiErrorDto.builder()
-                .status(400).error("Bad Request").message("Invalid input").path("/test").build();
+                .status(400).error("Bad Request").message("Invalid input").path("/test").timestamp(ts).build();
 
         ApiErrorDto b = ApiErrorDto.builder()
-                .status(400).error("Bad Request").message("Invalid input").path("/test").build();
+                .status(400).error("Bad Request").message("Invalid input").path("/test").timestamp(ts).build();
 
         assertEquals(a, b);
         assertEquals(a.hashCode(), b.hashCode());

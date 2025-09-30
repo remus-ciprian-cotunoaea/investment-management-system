@@ -1,0 +1,6 @@
+com\investment\common\exception\ForbiddenExceptionTest.class
+com\investment\common\dto\ApiErrorDtoTest.class
+com\investment\common\exception\BadRequestExceptionTest.class
+com\investment\common\exception\BusinessExceptionTest.class
+com\investment\common\exception\NotFoundExceptionTest.class
+com\investment\common\exception\UnauthorizedExceptionTest.class

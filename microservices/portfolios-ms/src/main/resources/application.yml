@@ -1,15 +1,13 @@
 spring:
   application:
     name: portfolios-ms
-
   jpa:
     show-sql: true
     properties:
       hibernate:
         format_sql: true
-        default_schema: portfolios   # <- si vas a usar schema "portfolios"
     hibernate:
-      ddl-auto: validate             # default seguro
+      ddl-auto: validate   # en común/prod validamos el schema
 
 management:
   endpoints:

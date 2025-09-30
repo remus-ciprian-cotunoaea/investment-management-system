@@ -1,6 +1,6 @@
-D:\PROJECT_INVESTMENTS\LIBRARIES\exceptions-lib\src\test\java\com\investment\common\dto\ApiErrorDtoTest.java
-D:\PROJECT_INVESTMENTS\LIBRARIES\exceptions-lib\src\test\java\com\investment\common\exception\BadRequestExceptionTest.java
-D:\PROJECT_INVESTMENTS\LIBRARIES\exceptions-lib\src\test\java\com\investment\common\exception\BusinessExceptionTest.java
-D:\PROJECT_INVESTMENTS\LIBRARIES\exceptions-lib\src\test\java\com\investment\common\exception\ForbiddenExceptionTest.java
-D:\PROJECT_INVESTMENTS\LIBRARIES\exceptions-lib\src\test\java\com\investment\common\exception\NotFoundExceptionTest.java
-D:\PROJECT_INVESTMENTS\LIBRARIES\exceptions-lib\src\test\java\com\investment\common\exception\UnauthorizedExceptionTest.java
+D:\GITHUB\investment-management-system\libraries\exceptions-lib\src\test\java\com\investment\common\dto\ApiErrorDtoTest.java
+D:\GITHUB\investment-management-system\libraries\exceptions-lib\src\test\java\com\investment\common\exception\BadRequestExceptionTest.java
+D:\GITHUB\investment-management-system\libraries\exceptions-lib\src\test\java\com\investment\common\exception\BusinessExceptionTest.java
+D:\GITHUB\investment-management-system\libraries\exceptions-lib\src\test\java\com\investment\common\exception\ForbiddenExceptionTest.java
+D:\GITHUB\investment-management-system\libraries\exceptions-lib\src\test\java\com\investment\common\exception\NotFoundExceptionTest.java
+D:\GITHUB\investment-management-system\libraries\exceptions-lib\src\test\java\com\investment\common\exception\UnauthorizedExceptionTest.java
