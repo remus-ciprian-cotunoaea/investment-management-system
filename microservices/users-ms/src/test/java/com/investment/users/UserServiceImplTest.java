@@ -6,87 +6,166 @@ import com.investment.users.entity.UserEntity;
 import com.investment.users.repository.UserRepository;
 import com.investment.users.service.UserServiceImpl;
 import com.investment.users.utils.enums.UserStatusEnum;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.*;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
 
     @Mock
-    UserRepository repository;
+    private UserRepository repository;
 
     @InjectMocks
-    UserServiceImpl service;
+    private UserServiceImpl service;
 
-    @Test
-    void getById_returnsDto() {
-        UUID id = UUID.randomUUID();
-        OffsetDateTime ts = OffsetDateTime.parse("2025-01-01T10:00:00Z");
+    private UUID id;
+    private UserEntity entity;
 
-        UserEntity entity = UserEntity.builder()
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+
+        id = UUID.randomUUID();
+
+        entity = UserEntity.builder()
                 .id(id)
                 .name("Alice")
-                .email("alice@email.com")
+                .email("alice@example.com")
                 .status(UserStatusEnum.ACTIVE)
-                .createdAt(ts.toInstant())      // <- OJO: usa OffsetDateTime en el test
-                .updatedAt(ts.toInstant())
+                .createdAt(Instant.parse("2025-01-01T00:00:00Z"))
+                .updatedAt(Instant.parse("2025-01-02T00:00:00Z"))
                 .build();
+    }
 
-        when(repository.findById(id)).thenReturn(Optional.of(entity));
+    // ========= CRUD básicos =========
 
-        UserResponseDto dto = service.getById(id);
+    @Test
+    void create_shouldReturnResponseDto() {
+        var req = new UserRequestDto("Alice", "alice@example.com", UserStatusEnum.ACTIVE);
+        when(repository.save(any(UserEntity.class))).thenReturn(entity);
 
-        assertEquals(id, dto.getId());
-        assertEquals("Alice", dto.getName());
-        assertEquals("alice@email.com", dto.getEmail());
-        assertEquals(UserStatusEnum.ACTIVE, dto.getStatus());
-        assertEquals(ts, dto.getCreatedAt());
-        assertEquals(ts, dto.getUpdatedAt());
+        UserResponseDto out = service.create(req);
+
+        assertNotNull(out);
+        assertEquals("Alice", out.getName());
+        assertEquals("alice@example.com", out.getEmail());
+        verify(repository).save(any(UserEntity.class));
     }
 
     @Test
-    void create_persistsAndReturnsDto() {
-        UUID fixedId = UUID.fromString("00000000-0000-0000-0000-000000000001");
-        OffsetDateTime ts = OffsetDateTime.parse("2025-01-01T10:00:00Z");
+    void getById_shouldReturn_whenFound() {
+        when(repository.findById(id)).thenReturn(Optional.of(entity));
 
-        // Ajusta el constructor/setters de tu UserRequestDto si no coincide
-        UserRequestDto req = UserRequestDto.builder()
-                .name("Alice")
-                .email("alice@email.com")
-                .status(UserStatusEnum.ACTIVE)
-                .build();
+        var out = service.getById(id);
 
-        // Devolvemos una entidad "persistida"
-        when(repository.save(any(UserEntity.class))).thenAnswer(inv -> {
-            UserEntity in = inv.getArgument(0);
-            return UserEntity.builder()
-                    .id(in.getId() != null ? in.getId() : fixedId)
-                    .name(in.getName())
-                    .email(in.getEmail())
-                    .status(in.getStatus())
-                    .createdAt(ts.toInstant())
-                    .updatedAt(ts.toInstant())
-                    .build();
-        });
+        assertEquals(id, out.getId());
+        assertEquals("Alice", out.getName());
+    }
 
-        UserResponseDto dto = service.create(req);
+    @Test
+    void update_shouldPersistChanges() {
+        var req = new UserRequestDto("Bob", "bob@ex.com", UserStatusEnum.INACTIVE);
+        when(repository.findById(id)).thenReturn(Optional.of(entity));
+        when(repository.save(any(UserEntity.class))).thenReturn(entity);
 
-        assertNotNull(dto.getId());
-        assertEquals("Alice", dto.getName());
-        assertEquals("alice@email.com", dto.getEmail());
-        assertEquals(UserStatusEnum.ACTIVE, dto.getStatus());
-        assertEquals(ts, dto.getCreatedAt());
-        assertEquals(ts, dto.getUpdatedAt());
+        var out = service.update(id, req);
+
+        assertEquals("Bob", out.getName());
+        assertEquals("bob@ex.com", out.getEmail());
+        assertEquals(UserStatusEnum.INACTIVE, out.getStatus());
+        verify(repository).save(any(UserEntity.class));
+    }
+
+    @Test
+    void delete_shouldRemove_whenExists() {
+        when(repository.existsById(id)).thenReturn(true);
+
+        service.delete(id);
+
+        verify(repository).deleteById(id);
+    }
+
+    @Test
+    void list_shouldReturnPage() {
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("createdAt").descending());
+        Page<UserEntity> page = new PageImpl<>(List.of(entity), pageable, 1);
+        when(repository.findAll(any(Pageable.class))).thenReturn(page);
+
+        var out = service.list(0, 10);
+
+        assertEquals(1, out.getTotalElements());
+        assertEquals("Alice", out.getContent().getFirst().getName());
+    }
+
+    // ========= métodos adicionales =========
+
+    @Test
+    void existsByEmail_shouldReturnTrueFalse() {
+        when(repository.existsByEmail("alice@example.com")).thenReturn(true);
+        when(repository.existsByEmail("nope@example.com")).thenReturn(false);
+
+        assertTrue(service.existsByEmail("alice@example.com"));
+        assertFalse(service.existsByEmail("nope@example.com"));
+    }
+
+    @Test
+    void findAllByStatus_shouldReturnMappedPage() {
+        Pageable pageable = PageRequest.of(0, 5, Sort.by("createdAt").descending());
+        Page<UserEntity> page = new PageImpl<>(List.of(entity), pageable, 1);
+        when(repository.findAllByStatus(eq(UserStatusEnum.ACTIVE), any(Pageable.class))).thenReturn(page);
+
+        var out = service.findAllByStatus(UserStatusEnum.ACTIVE, 0, 5);
+
+        assertEquals(1, out.getContent().size());
+        assertEquals(UserStatusEnum.ACTIVE, out.getContent().getFirst().getStatus());
+    }
+
+    @Test
+    void findAllByCreatedAtBetween_shouldReturnMappedPage() {
+        var from = Instant.parse("2024-12-31T00:00:00Z");
+        var to   = Instant.parse("2025-12-31T23:59:59Z");
+
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("createdAt").descending());
+        Page<UserEntity> page = new PageImpl<>(List.of(entity), pageable, 1);
+        when(repository.findAllByCreatedAtBetween(eq(from), eq(to), any(Pageable.class))).thenReturn(page);
+
+        var out = service.findAllByCreatedAtBetween(from, to, 0, 10);
+
+        assertEquals(1, out.getTotalElements());
+        assertEquals(id, out.getContent().getFirst().getId());
+    }
+
+    @Test
+    void searchByName_shouldReturnMappedPage() {
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("createdAt").descending());
+        Page<UserEntity> page = new PageImpl<>(List.of(entity), pageable, 1);
+        when(repository.findAllByNameContainingIgnoreCase(eq("ali"), any(Pageable.class))).thenReturn(page);
+
+        var out = service.searchByName("ali", 0, 10);
+
+        assertEquals(1, out.getNumberOfElements());
+        assertEquals("Alice", out.getContent().getFirst().getName());
+    }
+
+    @Test
+    void findByEmailIgnoreCase_shouldReturnOptional() {
+        when(repository.findByEmailIgnoreCase("alice@example.com")).thenReturn(Optional.of(entity));
+
+        var hit = service.findByEmailIgnoreCase("alice@example.com");
+
+        assertTrue(hit.isPresent());
+        assertEquals("Alice", hit.get().getName());
     }
 }

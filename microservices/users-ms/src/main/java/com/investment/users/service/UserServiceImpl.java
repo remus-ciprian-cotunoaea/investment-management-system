@@ -5,17 +5,15 @@ import com.investment.common.exception.NotFoundException;
 import com.investment.users.dto.UserRequestDto;
 import com.investment.users.dto.UserResponseDto;
 import com.investment.users.entity.UserEntity;
+import com.investment.users.utils.enums.UserStatusEnum;
 import com.investment.users.repository.UserRepository;
-import com.investment.users.utils.NumberUtils;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -24,9 +22,13 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository repository;
 
+    // =========================
+    // CRUD
+    // =========================
+
     @Override
     public UserResponseDto create(UserRequestDto request) {
-        UserEntity e = UserEntity.builder()
+        var e = UserEntity.builder()
                 .name(request.getName())
                 .email(request.getEmail())
                 .status(request.getStatus())
@@ -37,21 +39,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponseDto getById(UUID id) {
-        UserEntity e = repository.findById(id)
-                .orElseThrow(() -> new NotFoundException("users not found"));
-        return toResponse(e);
-    }
-
-    @Override
-    public UserResponseDto findByEmail(String email) {
-        UserEntity e = repository.findByEmailIgnoreCase(email)
+        var e = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("users not found"));
         return toResponse(e);
     }
 
     @Override
     public UserResponseDto update(UUID id, UserRequestDto request) {
-        UserEntity e = repository.findById(id)
+        var e = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("users not found"));
         e.setName(request.getName());
         e.setEmail(request.getEmail());
@@ -68,24 +63,66 @@ public class UserServiceImpl implements UserService {
         repository.deleteById(id);
     }
 
+    // =========================
+    // Listado general (paginado)
+    // =========================
+
     @Override
     public Page<UserResponseDto> list(int page, int size) {
-        if (!NumberUtils.isPositive(size)) {
-            throw new BadRequestException("size must be > 0");
-        }
+        if (size <= 0) throw new BadRequestException("size must be > 0");
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         return repository.findAll(pageable).map(this::toResponse);
     }
 
-    // --- mapper ---
+    // =========================
+    // Métodos 1:1 con el repositorio
+    // =========================
+
+    @Override
+    public Optional<UserResponseDto> findByEmailIgnoreCase(String email) {
+        return repository.findByEmailIgnoreCase(email).map(this::toResponse);
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return repository.existsByEmail(email);
+    }
+
+    @Override
+    public Page<UserResponseDto> findAllByStatus(UserStatusEnum status, int page, int size) {
+        if (size <= 0) throw new BadRequestException("size must be > 0");
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return repository.findAllByStatus(status, pageable).map(this::toResponse);
+    }
+
+    @Override
+    public Page<UserResponseDto> findAllByCreatedAtBetween(Instant from, Instant to, int page, int size) {
+        if (size <= 0) throw new BadRequestException("size must be > 0");
+        if (from == null || to == null) throw new BadRequestException("from/to required");
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return repository.findAllByCreatedAtBetween(from, to, pageable).map(this::toResponse);
+    }
+
+    @Override
+    public Page<UserResponseDto> searchByName(String name, int page, int size) {
+        if (size <= 0) throw new BadRequestException("size must be > 0");
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return repository.findAllByNameContainingIgnoreCase(name, pageable).map(this::toResponse);
+    }
+
+    // =========================
+    // Mapper
+    // =========================
+
     private UserResponseDto toResponse(UserEntity e) {
         return UserResponseDto.builder()
                 .id(e.getId())
                 .name(e.getName())
                 .email(e.getEmail())
                 .status(e.getStatus())
-                .createdAt(OffsetDateTime.ofInstant(e.getCreatedAt(), ZoneOffset.UTC))
-                .updatedAt(OffsetDateTime.ofInstant(e.getUpdatedAt(), ZoneOffset.UTC))
+                // si tu DTO incluye fechas en OffsetDateTime:
+                .createdAt(e.getCreatedAt() == null ? null : e.getCreatedAt().atOffset(ZoneOffset.UTC))
+                .updatedAt(e.getUpdatedAt() == null ? null : e.getUpdatedAt().atOffset(ZoneOffset.UTC))
                 .build();
     }
 }
