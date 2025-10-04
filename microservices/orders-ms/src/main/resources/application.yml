@@ -1,0 +1,31 @@
+server:
+  port: ${PORT:8082}
+
+spring:
+  application:
+    name: orders-ms
+
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        default_schema: orders
+    hibernate:
+      ddl-auto: validate   # en local lo cambiamos a 'update'
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when_authorized
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
