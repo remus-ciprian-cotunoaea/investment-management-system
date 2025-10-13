@@ -1,0 +1,95 @@
+########################################
+# General Build / Maven
+########################################
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+########################################
+# STS (Spring Tool Suite)
+########################################
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+########################################
+# IntelliJ IDEA
+########################################
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+########################################
+# NetBeans
+########################################
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+########################################
+# VS Code
+########################################
+.vscode/
+
+########################################
+# Logs / Temporary Files
+########################################
+*.log
+*.tmp
+*.pid
+hs_err_pid*
+replay_pid*
+
+########################################
+# Operating System Files
+########################################
+.DS_Store
+Thumbs.db
+
+########################################
+# Spring Boot / Configuration
+########################################
+# Excluir perfiles locales y productivos
+src/main/resources/application-local.yml
+src/main/resources/application-prod.yml
+
+########################################
+# Sensitive files / Security keys
+########################################
+*.env
+*.key
+*.pem
+*.crt
+*.p12
+*.jks
+*.keystore
+
+########################################
+# Test / Coverage / Reports
+########################################
+test-output/
+surefire-reports/
+coverage/
+*.lcov
+
+########################################
+# Docker / Misc / Cache
+########################################
+*.bak
+*.old
+*.orig
+*.swp
+*.swo
