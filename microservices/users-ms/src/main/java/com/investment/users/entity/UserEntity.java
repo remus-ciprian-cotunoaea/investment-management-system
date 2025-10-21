@@ -8,7 +8,17 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.util.UUID;
 
-
+/**
+ * JPA entity representing a user stored in the database.
+ * <p>
+ * This class:
+ * - Is mapped as a persistent JPA entity to the `users` table.
+ * - Implements {@link java.io.Serializable} to allow serialization for caching or transport.
+ * - Encapsulates common user fields such as id, name, email, creation/update timestamps and status.
+ *
+ * @author Remus-Ciprian Cotunoaea
+ * @since October 19, 2025
+ */
 @Entity
 @Table(
         name = "users",
@@ -20,7 +30,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @ToString(onlyExplicitlyIncluded = true)
-@NoArgsConstructor(access = AccessLevel.PROTECTED) // Hibernate necesita ctor vacío
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
 @EqualsAndHashCode(of = "id")
