@@ -1,5 +1,6 @@
 package com.investment.users.configuration;
 
+import com.investment.users.utils.Constants;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
@@ -22,7 +23,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OpenApiConfig {
 
-    private static final String SECURITY_SCHEME = "bearer-jwt";
+    private static final String SECURITY_SCHEME = Constants.SECURITY_SCHEME_NAME;
 
     /**
      * Create the base OpenAPI definition containing API info and the security scheme.
@@ -40,16 +41,16 @@ public class OpenApiConfig {
     OpenAPI baseOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Users MS API")
-                        .version("v1")
-                        .description("Operations for users and admin"))
+                        .title(Constants.OPEN_API_TITLE_INFO)
+                        .version(Constants.VERSION_ONE)
+                        .description(Constants.OPEN_API_DESCRIPTION_INFO))
                 .components(new Components().addSecuritySchemes(
                         SECURITY_SCHEME,
                         new SecurityScheme()
                                 .name(SECURITY_SCHEME)
                                 .type(SecurityScheme.Type.HTTP)
-                                .scheme("bearer")
-                                .bearerFormat("JWT")
+                                .scheme(Constants.BEARER)
+                                .bearerFormat(Constants.JWT_FORMAT)
                 ))
                 .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME));
     }
@@ -68,8 +69,8 @@ public class OpenApiConfig {
     @Bean
     GroupedOpenApi usersGroup() {
         return GroupedOpenApi.builder()
-                .group("users")
-                .pathsToMatch("/api/v1/users/**")
+                .group(Constants.USERS_GROUP)
+                .pathsToMatch(Constants.OPEN_API_USERS_PATH)
                 .build();
     }
 
@@ -87,8 +88,8 @@ public class OpenApiConfig {
     @Bean
     GroupedOpenApi adminGroup() {
         return GroupedOpenApi.builder()
-                .group("admin")
-                .pathsToMatch("/api/v1/admin/**")
+                .group(Constants.ADMIN_GROUP)
+                .pathsToMatch(Constants.OPEN_API_ADMIN_PATH)
                 .build();
     }
 }

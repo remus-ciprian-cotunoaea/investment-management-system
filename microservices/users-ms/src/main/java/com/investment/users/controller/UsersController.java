@@ -3,11 +3,13 @@ package com.investment.users.controller;
 import com.investment.users.dto.UserRequestDto;
 import com.investment.users.dto.UserResponseDto;
 import com.investment.users.service.UserService;
+import com.investment.users.utils.Constants;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -32,7 +34,7 @@ import java.util.UUID;
 @Validated
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/users")
+@RequestMapping(Constants.USERS_BASE_PATH)
 public class UsersController {
 
     private final UserService service;
@@ -66,10 +68,10 @@ public class UsersController {
      * @since October 20, 2025
      */
     // (opcional) registro básico público; elimina si tu caso no lo permite
-    @PostMapping(consumes = "application/json", produces = "application/json")
+    @PostMapping(consumes = Constants.APPLICATION_JSON, produces = Constants.APPLICATION_JSON)
     public ResponseEntity<UserResponseDto> create(@Valid @RequestBody UserRequestDto request) {
         UserResponseDto created = service.create(request);
-        URI location = URI.create("/api/users/" + created.getId());
+        URI location = URI.create(Constants.USERS_URI_LOCATION + created.getId());
         return ResponseEntity.created(location).body(created);
     }
 
@@ -86,8 +88,8 @@ public class UsersController {
      * @since October 20, 2025
      */
     // Buscar por email (case-insensitive)
-    @GetMapping(value = "/by-email", produces = "application/json")
-    public ResponseEntity<Optional<UserResponseDto>> findByEmail(@RequestParam("email") @NotBlank String email) {
+    @GetMapping(value = "/by-email", produces = Constants.APPLICATION_JSON)
+    public ResponseEntity<Optional<UserResponseDto>> findByEmail(@RequestParam(Constants.EMAIL) @NotBlank String email) {
         return ResponseEntity.ok(service.findByEmailIgnoreCase(email));
     }
 
@@ -103,8 +105,8 @@ public class UsersController {
      * @since October 20, 2025
      */
     // Verificar existencia por email
-    @GetMapping(value = "/exists", produces = "application/json")
-    public ResponseEntity<Boolean> existsByEmail(@RequestParam("email") @NotBlank String email) {
+    @GetMapping(value = "/exists", produces = Constants.APPLICATION_JSON)
+    public ResponseEntity<Boolean> existsByEmail(@RequestParam(Constants.EMAIL) @NotBlank String email) {
         return ResponseEntity.ok(service.existsByEmail(email));
     }
 
@@ -122,10 +124,10 @@ public class UsersController {
      * @since October 20, 2025
      */
     // Listado paginado simple (orden por createdAt desc definido en service)
-    @GetMapping(produces = "application/json")
-    public ResponseEntity<?> list(
-            @RequestParam(defaultValue = "0") @Min(0) int page,
-            @RequestParam(defaultValue = "10") @Positive int size) {
+    @GetMapping(produces = Constants.APPLICATION_JSON)
+    public ResponseEntity<Page<UserResponseDto>> list(
+            @RequestParam(defaultValue = Constants.STR_ZERO) @Min(Constants.ZERO) int page,
+            @RequestParam(defaultValue = Constants.STR_TEN) @Positive int size) {
         return ResponseEntity.ok(service.list(page, size));
     }
 }

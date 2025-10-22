@@ -2,6 +2,7 @@ package com.investment.users.exception;
 
 import com.investment.common.exception.*;
 import com.investment.common.dto.*;
+import com.investment.users.utils.Constants;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -40,7 +41,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ApiErrorDto> handleNotFound(NotFoundException ex) {
-        return build(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage());
+        return build(HttpStatus.NOT_FOUND, Constants.MESSAGE_NOT_FOUND, ex.getMessage());
     }
 
     /**
@@ -53,7 +54,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ApiErrorDto> handleBadRequest(BadRequestException ex) {
-        return build(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage());
+        return build(HttpStatus.BAD_REQUEST, Constants.MESSAGE_BAD_REQUEST, ex.getMessage());
     }
 
     /**
@@ -66,7 +67,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<ApiErrorDto> handleUnauthorized(UnauthorizedException ex) {
-        return build(HttpStatus.UNAUTHORIZED, "Unauthorized", ex.getMessage());
+        return build(HttpStatus.UNAUTHORIZED, Constants.MESSAGE_UNAUTHORIZED, ex.getMessage());
     }
 
     /**
@@ -79,7 +80,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(ForbiddenException.class)
     public ResponseEntity<ApiErrorDto> handleForbidden(ForbiddenException ex) {
-        return build(HttpStatus.FORBIDDEN, "Forbidden", ex.getMessage());
+        return build(HttpStatus.FORBIDDEN, Constants.MESSAGE_FORBIDDEN, ex.getMessage());
     }
 
     /**
@@ -95,7 +96,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiErrorDto> handleBusiness(BusinessException ex) {
-        return build(HttpStatus.UNPROCESSABLE_ENTITY, "Business Rule", ex.getMessage());
+        return build(HttpStatus.UNPROCESSABLE_ENTITY, Constants.MESSAGE_BUSINESS_RULE, ex.getMessage());
     }
 
     // ==== common Spring/validation errors ====
@@ -116,9 +117,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorDto> handleValidation(MethodArgumentNotValidException ex) {
         String msg = ex.getBindingResult().getFieldErrors().stream()
                 .findFirst()
-                .map(fe -> fe.getField() + " " + fe.getDefaultMessage())
-                .orElse("Validation error");
-        return build(HttpStatus.BAD_REQUEST, "Bad Request", msg);
+                .map(fe -> fe.getField() + Constants.STRING_EMPTY_SPACE + fe.getDefaultMessage())
+                .orElse(Constants.MESSAGE_VALIDATION_ERROR);
+        return build(HttpStatus.BAD_REQUEST, Constants.MESSAGE_BAD_REQUEST, msg);
     }
 
     /**
@@ -138,9 +139,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorDto> handleConstraint(ConstraintViolationException ex) {
         String msg = ex.getConstraintViolations().stream()
                 .findFirst()
-                .map(v -> v.getPropertyPath() + " " + v.getMessage())
-                .orElse("Constraint violation");
-        return build(HttpStatus.BAD_REQUEST, "Bad Request", msg);
+                .map(v -> v.getPropertyPath() + Constants.STRING_EMPTY_SPACE + v.getMessage())
+                .orElse(Constants.MESSAGE_CONSTRAINT_VALIDATION);
+        return build(HttpStatus.BAD_REQUEST, Constants.MESSAGE_BAD_REQUEST, msg);
     }
 
     /**
@@ -157,7 +158,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiErrorDto> handleNotReadable(HttpMessageNotReadableException ex) {
-        return build(HttpStatus.BAD_REQUEST, "Bad Request", "Malformed JSON request"
+        return build(HttpStatus.BAD_REQUEST, Constants.MESSAGE_BAD_REQUEST, Constants.MESSAGE_JSON_ERROR
                 + ex.getMostSpecificCause().getMessage());
     }
 
@@ -175,7 +176,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiErrorDto> handleDataIntegrity(DataIntegrityViolationException ex) {
-        return build(HttpStatus.CONFLICT, "Data Integrity", "Unique/foreign key constraint violated"
+        return build(HttpStatus.CONFLICT, Constants.DATA_INTEGRITY_ERROR, Constants.MESSAGE_KEY_CONSTRAINT
                 + Objects.requireNonNull(ex.getRootCause()).getMessage());
     }
 
@@ -193,7 +194,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorDto> handleGeneric(Exception ex) {
-        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Error", "Unexpected error"
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, Constants.MESSAGE_INTERNAL_ERROR, Constants.MESSAGE_UNEXPECTED_ERROR
                 + ex.getMessage());
     }
 
@@ -218,7 +219,7 @@ public class GlobalExceptionHandler {
                 .status(status.value())
                 .error(error)
                 .message(message)
-                .path("")
+                .path(Constants.STRING_EMPTY)
                 .build();
         return ResponseEntity.status(status).body(body);
     }

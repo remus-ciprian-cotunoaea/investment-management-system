@@ -2,6 +2,7 @@ package com.investment.users.controller;
 
 import com.investment.users.dto.UserRequestDto;
 import com.investment.users.dto.UserResponseDto;
+import com.investment.users.utils.Constants;
 import com.investment.users.utils.enums.UserStatusEnum;
 import com.investment.users.service.UserService;
 import jakarta.validation.Valid;
@@ -9,6 +10,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -38,7 +40,7 @@ import java.util.UUID;
 @Validated
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/admin")
+@RequestMapping(Constants.ADMIN_BASE_PATH)
 public class AdminController {
 
     private final UserService service;
@@ -57,10 +59,10 @@ public class AdminController {
      * @author Remus-Ciprian Cotunoaea
      * @since October 20, 2025
      */
-    @PostMapping(consumes = "application/json", produces = "application/json")
+    @PostMapping(consumes = Constants.APPLICATION_JSON, produces = Constants.APPLICATION_JSON)
     public ResponseEntity<UserResponseDto> create(@Valid @RequestBody UserRequestDto request) {
         UserResponseDto created = service.create(request);
-        URI location = URI.create("/api/admin/users/" + created.getId());
+        URI location = URI.create(Constants.ADMIN_URI_LOCATION + created.getId());
         return ResponseEntity.created(location).body(created);
     }
 
@@ -72,7 +74,7 @@ public class AdminController {
      * @author Remus-Ciprian Cotunoaea
      * @since October 20, 2025
      */
-    @GetMapping(value = "/{id}", produces = "application/json")
+    @GetMapping(value = "/{id}", produces = Constants.APPLICATION_JSON)
     public ResponseEntity<UserResponseDto> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(service.getById(id));
     }
@@ -89,7 +91,7 @@ public class AdminController {
      * @author Remus-Ciprian Cotunoaea
      * @since October 20, 2025
      */
-    @PutMapping(value = "/{id}", consumes = "application/json", produces = "application/json")
+    @PutMapping(value = "/{id}", consumes = Constants.APPLICATION_JSON, produces = Constants.APPLICATION_JSON)
     public ResponseEntity<UserResponseDto> update(@PathVariable UUID id,
                                                   @Valid @RequestBody UserRequestDto request) {
         return ResponseEntity.ok(service.update(id, request));
@@ -118,10 +120,10 @@ public class AdminController {
      * @author Remus-Ciprian Cotunoaea
      * @since October 20, 2025
      */
-    @GetMapping(produces = "application/json")
-    public ResponseEntity<?> list(
-            @RequestParam(defaultValue = "0") @Min(0) int page,
-            @RequestParam(defaultValue = "10") @Positive int size) {
+    @GetMapping(produces = Constants.APPLICATION_JSON)
+    public ResponseEntity<Page<UserResponseDto>> list(
+            @RequestParam(defaultValue = Constants.STR_ZERO) @Min(Constants.ZERO) int page,
+            @RequestParam(defaultValue = Constants.STR_TEN) @Positive int size) {
         return ResponseEntity.ok(service.list(page, size));
     }
 
@@ -138,10 +140,10 @@ public class AdminController {
      * @author Remus-Ciprian Cotunoaea
      * @since October 20, 2025
      */
-    @GetMapping(value = "/status/{status}", produces = "application/json")
-    public ResponseEntity<?> findAllByStatus(@PathVariable UserStatusEnum status,
-                                             @RequestParam(defaultValue = "0") @Min(0) int page,
-                                             @RequestParam(defaultValue = "10") @Positive int size) {
+    @GetMapping(value = "/status/{status}", produces = Constants.APPLICATION_JSON)
+    public ResponseEntity<Page<UserResponseDto>> findAllByStatus(@PathVariable UserStatusEnum status,
+                                             @RequestParam(defaultValue = Constants.STR_ZERO) @Min(Constants.ZERO) int page,
+                                             @RequestParam(defaultValue = Constants.STR_TEN) @Positive int size) {
         return ResponseEntity.ok(service.findAllByStatus(status, page, size));
     }
 
@@ -160,18 +162,17 @@ public class AdminController {
      * @author Remus-Ciprian Cotunoaea
      * @since October 20, 2025
      */
-    @GetMapping(value = "/created", produces = "application/json")
-    public ResponseEntity<?> findAllByCreatedAtBetween(
-            @RequestParam("from")
+    @GetMapping(value = "/created", produces = Constants.APPLICATION_JSON)
+    public ResponseEntity<Page<UserResponseDto>> findAllByCreatedAtBetween(
+            @RequestParam(Constants.DATE_FROM)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
-            @RequestParam("to")
+            @RequestParam(Constants.DATE_TO)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to,
-            @RequestParam(defaultValue = "0") @Min(0) int page,
-            @RequestParam(defaultValue = "10") @Positive int size) {
+            @RequestParam(defaultValue = Constants.STR_ZERO) @Min(Constants.ZERO) int page,
+            @RequestParam(defaultValue = Constants.STR_TEN) @Positive int size) {
         return ResponseEntity.ok(service.findAllByCreatedAtBetween(from, to, page, size));
     }
 
-    // Search by name (searchByName)
     /**
      * Search users by (partial) name with pagination.
      *
@@ -182,14 +183,13 @@ public class AdminController {
      * @author Remus-Ciprian Cotunoaea
      * @since October 20, 2025
      */
-    @GetMapping(value = "/search", produces = "application/json")
-    public ResponseEntity<?> searchByName(@RequestParam("name") @NotBlank String name,
-                                          @RequestParam(defaultValue = "0") @Min(0) int page,
-                                          @RequestParam(defaultValue = "10") @Positive int size) {
+    @GetMapping(value = "/search-name", produces = Constants.APPLICATION_JSON)
+    public ResponseEntity<Page<UserResponseDto>> searchByName(@RequestParam(Constants.NAME) @NotBlank String name,
+                                          @RequestParam(defaultValue = Constants.STR_ZERO) @Min(Constants.ZERO) int page,
+                                          @RequestParam(defaultValue = Constants.STR_TEN) @Positive int size) {
         return ResponseEntity.ok(service.searchByName(name, page, size));
     }
 
-    // Email utilities also available here (optional duplicate)
     /**
      * Find a user by email (case-insensitive).
      *
@@ -198,8 +198,8 @@ public class AdminController {
      * @author Remus-Ciprian Cotunoaea
      * @since October 20, 2025
      */
-    @GetMapping(value = "/by-email", produces = "application/json")
-    public ResponseEntity<Optional<UserResponseDto>> findByEmail(@RequestParam("email") @NotBlank String email) {
+    @GetMapping(value = "/by-email", produces = Constants.APPLICATION_JSON)
+    public ResponseEntity<Optional<UserResponseDto>> findByEmail(@RequestParam(Constants.EMAIL) @NotBlank String email) {
         return ResponseEntity.ok(service.findByEmailIgnoreCase(email));
     }
 
@@ -211,8 +211,8 @@ public class AdminController {
      * @author Remus-Ciprian Cotunoaea
      * @since October 20, 2025
      */
-    @GetMapping(value = "/exists", produces = "application/json")
-    public ResponseEntity<Boolean> existsByEmail(@RequestParam("email") @NotBlank String email) {
+    @GetMapping(value = "/exists", produces = Constants.APPLICATION_JSON)
+    public ResponseEntity<Boolean> existsByEmail(@RequestParam(Constants.EMAIL) @NotBlank String email) {
         return ResponseEntity.ok(service.existsByEmail(email));
     }
 }

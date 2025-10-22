@@ -1,5 +1,6 @@
 package com.investment.users.configuration;
 
+import com.investment.users.utils.Constants;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -18,7 +19,7 @@ import org.springframework.stereotype.Component;
  * @author Remus-Ciprian Cotunoaea
  * @since October 20, 2025
  */
-@Component("users-ms")
+@Component(Constants.MICROSERVICE_NAME)
 public class UserMsHealthIndicator implements HealthIndicator {
 
     private final JdbcTemplate jdbc;
@@ -50,10 +51,10 @@ public class UserMsHealthIndicator implements HealthIndicator {
     @Override
     public Health health() {
         try {
-            jdbc.queryForObject("select 1", Integer.class);
-            return Health.up().withDetail("db", "ok").build();
+            jdbc.queryForObject(Constants.HEALTH_QUERY, Integer.class);
+            return Health.up().withDetail(Constants.DATABASE, Constants.OKAY).build();
         } catch (Exception e) {
-            return Health.down(e).withDetail("db", "fail").build();
+            return Health.down(e).withDetail(Constants.DATABASE, Constants.FAIL).build();
         }
     }
 }

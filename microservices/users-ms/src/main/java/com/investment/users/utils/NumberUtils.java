@@ -12,6 +12,6 @@ public final class NumberUtils {
      * Useful for validating inputs such as page size or numeric fields.
      */
     public static boolean isNonPositive(int number) {
-        return number <= 0;
+        return number <= Constants.ZERO;
     }
 }

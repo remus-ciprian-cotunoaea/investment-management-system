@@ -7,7 +7,7 @@ spring:
       hibernate:
         format_sql: true
     hibernate:
-      ddl-auto: validate   # o 'update' si quieres que cree/actualice en local
+      ddl-auto: validate
 
 management:
   endpoints:

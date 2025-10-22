@@ -1,5 +1,6 @@
 package com.investment.users.configuration;
 
+import com.investment.users.utils.Constants;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -50,19 +51,17 @@ public class SecurityConfig {
      */
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                // aquí ya no da warning
-                .csrf(AbstractHttpConfigurer::disable)
+        http.csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/v3/api-docs/**",
-                                "/swagger-ui.html",
-                                "/swagger-ui/**",
-                                "/actuator/health/**"
+                                Constants.API_DOCS_VERSION_THREE,
+                                Constants.SWAGGER_ONE,
+                                Constants.SWAGGER_TWO,
+                                Constants.HEALTH_CHECK_PATH
                         ).permitAll()
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/users/**").authenticated()
+                        .requestMatchers(Constants.OPEN_API_ADMIN_PATH).hasRole(Constants.ADMIN_ROLE)
+                        .requestMatchers(HttpMethod.GET, Constants.OPEN_API_USERS_PATH).authenticated()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));

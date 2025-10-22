@@ -272,7 +272,8 @@ class UserServiceImplTest {
     @Test
     void list_returnsMappedPage() {
         var e = baseEntity("P1", "p1@test.com", UserStatusEnum.ACTIVE, FIXED_NOW, FIXED_NOW);
-        var page = new PageImpl<>(List.of(e), PageRequest.of(0, 10, Sort.by("createdAt").descending()), 1);
+        var page = new PageImpl<>(List.of(e), PageRequest.of(0, 10, Sort.by("createdAt")
+                .descending()), 1);
         when(repository.findAll(any(Pageable.class))).thenReturn(page);
 
         Page<UserResponseDto> result = service.list(0, 10);

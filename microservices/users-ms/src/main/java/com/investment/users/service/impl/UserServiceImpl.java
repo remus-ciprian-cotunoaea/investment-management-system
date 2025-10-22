@@ -5,6 +5,7 @@ import com.investment.common.exception.NotFoundException;
 import com.investment.users.dto.UserRequestDto;
 import com.investment.users.dto.UserResponseDto;
 import com.investment.users.entity.UserEntity;
+import com.investment.users.utils.Constants;
 import com.investment.users.utils.enums.UserStatusEnum;
 import com.investment.users.exception.*;
 import com.investment.users.model.UserModel;
@@ -27,12 +28,12 @@ import java.util.UUID;
 
 
 /**
- * Implementation of {@link com.investment.users.service.UserService} providing
+ * Implementation of {@link UserService} providing
  * user-related business operations and mapping between entities, models and DTOs.
  *
  * <p>This service performs create, read, update and delete operations and offers
  * several query methods with pagination. It centralizes validation for page
- * size and uses {@link com.investment.users.utils.DateTimeUtils} for UTC timestamps.
+ * size and uses {@link DateTimeUtils} for UTC timestamps.
  * Mapping is performed via private helper methods to keep controller/service
  * layers decoupled from persistence entities.</p>
  *
@@ -56,13 +57,13 @@ public class UserServiceImpl implements UserService {
      * resulting {@link UserEntity} using {@link UserRepository}.</p>
      *
      * @param request the incoming request DTO containing user data
-     * @return the created {@link com.investment.users.dto.UserResponseDto}
+     * @return the created {@link UserResponseDto}
      * @author Remus-Ciprian Cotunoaea
      * @since October 20, 2025
      */
     @Override
     public UserResponseDto create(UserRequestDto request) {
-        final Instant now = DateTimeUtils.nowUtc(); // <- util: UTC consistente
+        final Instant now = DateTimeUtils.nowUtc();
 
         var e = UserEntity.builder()
                 .name(request.getName())
@@ -80,21 +81,20 @@ public class UserServiceImpl implements UserService {
      * Retrieve a user by its UUID.
      *
      * <p>Loads the entity from the repository, converts it into an intermediate
-     * {@link com.investment.users.model.UserModel}, and returns a response DTO.</p>
+     * {@link UserModel}, and returns a response DTO.</p>
      *
      * @param id the UUID of the user to retrieve
-     * @return the {@link com.investment.users.dto.UserResponseDto} for the user
-     * @throws com.investment.common.exception.NotFoundException when the user is not present
+     * @return the {@link UserResponseDto} for the user
+     * @throws NotFoundException when the user is not present
      * @author Remus-Ciprian Cotunoaea
      * @since October 20, 2025
      */
     @Override
     public UserResponseDto getById(UUID id) {
         var e = repository.findById(id)
-                .orElseThrow(() -> new NotFoundException("users not found"));
-        // ejemplo de uso del modelo intermedio sin romper nada
+                .orElseThrow(() -> new NotFoundException(Constants.MESSAGE_NOT_FOUND));
         var model = toModel(e);
-        return toResponse(model); // delegación (evita duplicar el mapeo)
+        return toResponse(model);
     }
 
     /**
@@ -105,15 +105,15 @@ public class UserServiceImpl implements UserService {
      *
      * @param id the UUID of the user to update
      * @param request the DTO containing updated user fields
-     * @return the updated {@link com.investment.users.dto.UserResponseDto}
-     * @throws com.investment.common.exception.NotFoundException when the user is not present
+     * @return the updated {@link UserResponseDto}
+     * @throws NotFoundException when the user is not present
      * @author Remus-Ciprian Cotunoaea
      * @since October 20, 2025
      */
     @Override
     public UserResponseDto update(UUID id, UserRequestDto request) {
         var e = repository.findById(id)
-                .orElseThrow(() -> new NotFoundException("users not found"));
+                .orElseThrow(() -> new NotFoundException(Constants.MESSAGE_NOT_FOUND));
 
         e.setName(request.getName());
         e.setEmail(request.getEmail());
@@ -121,7 +121,7 @@ public class UserServiceImpl implements UserService {
         e.setUpdatedAt(DateTimeUtils.nowUtc());
 
         e = repository.save(e);
-        return toResponse(e); // sigue funcionando igual
+        return toResponse(e);
     }
 
     /**
@@ -132,14 +132,14 @@ public class UserServiceImpl implements UserService {
      * NotFoundException.</p>
      *
      * @param id the UUID of the user to delete
-     * @throws com.investment.common.exception.NotFoundException when the user is not present
+     * @throws NotFoundException when the user is not present
      * @author Remus-Ciprian Cotunoaea
      * @since October 20, 2025
      */
     @Override
     public void delete(UUID id) {
         if (!repository.existsById(id)) {
-            throw new NotFoundException("users not found");
+            throw new NotFoundException(Constants.MESSAGE_NOT_FOUND);
         }
         repository.deleteById(id);
     }
@@ -149,15 +149,15 @@ public class UserServiceImpl implements UserService {
      *
      * @param page zero-based page index
      * @param size page size (must be > 0)
-     * @return a {@link org.springframework.data.domain.Page} of {@link com.investment.users.dto.UserResponseDto}
-     * @throws com.investment.common.exception.BadRequestException when size is invalid
+     * @return a {@link Page} of {@link UserResponseDto}
+     * @throws BadRequestException when size is invalid
      * @author Remus-Ciprian Cotunoaea
      * @since October 20, 2025
      */
     @Override
     public Page<UserResponseDto> list(int page, int size) {
         validatePageSize(size);
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Constants.CREATED_AT_ATTRIBUTE).descending());
         return repository.findAll(pageable).map(this::toResponse);
     }
 
@@ -169,7 +169,7 @@ public class UserServiceImpl implements UserService {
      * Find a user by email (case-insensitive).
      *
      * @param email the email to search for
-     * @return an Optional containing {@link com.investment.users.dto.UserResponseDto} when found
+     * @return an Optional containing {@link UserResponseDto} when found
      * @author Remus-Ciprian Cotunoaea
      * @since October 20, 2025
      */
@@ -198,14 +198,14 @@ public class UserServiceImpl implements UserService {
      * @param page zero-based page index
      * @param size page size (must be > 0)
      * @return a paginated result of matching users
-     * @throws com.investment.common.exception.BadRequestException when size is invalid
+     * @throws BadRequestException when size is invalid
      * @author Remus-Ciprian Cotunoaea
      * @since October 20, 2025
      */
     @Override
     public Page<UserResponseDto> findAllByStatus(UserStatusEnum status, int page, int size) {
         validatePageSize(size);
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Constants.CREATED_AT_ATTRIBUTE).descending());
         return repository.findAllByStatus(status, pageable).map(this::toResponse);
     }
 
@@ -220,17 +220,21 @@ public class UserServiceImpl implements UserService {
      * @param page zero-based page index
      * @param size page size (must be > 0)
      * @return a paginated result of users created in the given range
-     * @throws com.investment.common.exception.BadRequestException when inputs are invalid
+     * @throws BadRequestException when inputs are invalid
      * @author Remus-Ciprian Cotunoaea
      * @since October 20, 2025
      */
     @Override
     public Page<UserResponseDto> findAllByCreatedAtBetween(Instant from, Instant to, int page, int size) {
         validatePageSize(size);
-        if (from == null || to == null) throw new BadRequestException("'from/to' required");
-        if (from.isAfter(to)) throw new BadRequestException("'from' must be <= 'to'");
+        if (from == null || to == null) {
+            throw new BadRequestException(Constants.FROM_TO_REQUIRED);
+        }
+        if (from.isAfter(to)) {
+            throw new BadRequestException(Constants.FROM_AFTER_ERROR);
+        }
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Constants.CREATED_AT_ATTRIBUTE).descending());
         return repository.findAllByCreatedAtBetween(from, to, pageable).map(this::toResponse);
     }
 
@@ -241,14 +245,14 @@ public class UserServiceImpl implements UserService {
      * @param page zero-based page index
      * @param size page size (must be > 0)
      * @return a paginated result of users whose name contains the provided value
-     * @throws com.investment.common.exception.BadRequestException when size is invalid
+     * @throws BadRequestException when size is invalid
      * @author Remus-Ciprian Cotunoaea
      * @since October 20, 2025
      */
     @Override
     public Page<UserResponseDto> searchByName(String name, int page, int size) {
         validatePageSize(size);
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Constants.CREATED_AT_ATTRIBUTE).descending());
         return repository.findAllByNameContainingIgnoreCase(name, pageable).map(this::toResponse);
     }
 
@@ -257,13 +261,13 @@ public class UserServiceImpl implements UserService {
     // ==============================
 
     /**
-     * Map a {@link com.investment.users.model.UserModel} to a {@link com.investment.users.dto.UserResponseDto}.
+     * Map a {@link UserModel} to a {@link UserResponseDto}.
      *
      * <p>Converts LocalDateTime fields to OffsetDateTime with UTC offset before
      * building the response DTO so clients receive timezone-aware timestamps.</p>
      *
      * @param m the intermediate user model
-     * @return populated {@link com.investment.users.dto.UserResponseDto}
+     * @return populated {@link UserResponseDto}
      * @author Remus-Ciprian Cotunoaea
      * @since October 20, 2025
      */
@@ -282,7 +286,7 @@ public class UserServiceImpl implements UserService {
      * Map a {@link UserEntity} to a response DTO via the intermediate model conversion.
      *
      * @param e the persistence entity
-     * @return the corresponding {@link com.investment.users.dto.UserResponseDto}
+     * @return the corresponding {@link UserResponseDto}
      * @author Remus-Ciprian Cotunoaea
      * @since October 20, 2025
      */
@@ -321,13 +325,13 @@ public class UserServiceImpl implements UserService {
      * Validate that the provided page size is positive.
      *
      * @param size the page size to validate
-     * @throws com.investment.common.exception.BadRequestException when size is <= 0
+     * @throws BadRequestException when size is <= 0
      * @author Remus-Ciprian Cotunoaea
      * @since October 20, 2025
      */
     private void validatePageSize(int size) {
         if (NumberUtils.isNonPositive(size)) {
-            throw new BadRequestException("size must be > 0");
+            throw new BadRequestException(Constants.MESSAGE_ERROR_SIZE);
         }
     }
 }

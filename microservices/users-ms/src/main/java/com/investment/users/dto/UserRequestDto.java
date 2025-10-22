@@ -1,6 +1,7 @@
 // src/main/java/com/investment/users/dto/UserRequestDto.java
 package com.investment.users.dto;
 
+import com.investment.users.utils.Constants;
 import com.investment.users.utils.enums.UserStatusEnum;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -31,7 +32,7 @@ import lombok.*;
 public class UserRequestDto {
 
     @NotBlank
-    @Size(max = 100)
+    @Size(max = Constants.HUNDRED)
     private String name;
 
     @NotBlank

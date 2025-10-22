@@ -1,5 +1,6 @@
 package com.investment.users.entity;
 
+import com.investment.users.utils.Constants;
 import com.investment.users.utils.enums.UserStatusEnum;
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,7 +14,7 @@ import java.util.UUID;
  * <p>
  * This class:
  * - Is mapped as a persistent JPA entity to the `users` table.
- * - Implements {@link java.io.Serializable} to allow serialization for caching or transport.
+ * - Implements {@link Serializable} to allow serialization for caching or transport.
  * - Encapsulates common user fields such as id, name, email, creation/update timestamps and status.
  *
  * @author Remus-Ciprian Cotunoaea
@@ -21,10 +22,10 @@ import java.util.UUID;
  */
 @Entity
 @Table(
-        name = "users",
-        schema = "users",
+        name = Constants.ENTITY_SCHEMA_TABLE_NAME,
+        schema = Constants.ENTITY_SCHEMA_TABLE_NAME,
         indexes = {
-                @Index(name = "ux_users_email", columnList = "email", unique = true)
+                @Index(name = Constants.ENTITY_INDEX_NAME, columnList = Constants.EMAIL, unique = true)
         }
 )
 @Getter
@@ -37,24 +38,24 @@ import java.util.UUID;
 public class UserEntity implements Serializable {
 
     @Id
-    @Column(name = "user_id", updatable = false, columnDefinition = "uuid")
+    @Column(name = Constants.USER_ID, updatable = false, columnDefinition = Constants.UUID)
     private UUID id = UUID.randomUUID();
 
     @ToString.Include
-    @Column(name = "name", nullable = false, length = 100)
+    @Column(name = Constants.NAME, nullable = false, length = Constants.HUNDRED)
     private String name;
 
     @ToString.Include
-    @Column(name = "email", nullable = false, unique = true, columnDefinition = "citext")
+    @Column(name = Constants.EMAIL, nullable = false, unique = true, columnDefinition = Constants.TEXT)
     private String email;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = Constants.CREATED_AT, nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
-    @Column(name = "update_at", nullable = false)
+    @Column(name = Constants.UPDATED_AT, nullable = false)
     private Instant updatedAt = createdAt;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 16)
+    @Column(name = Constants.STATUS, nullable = false, length = Constants.SIXTEEN)
     private UserStatusEnum status = UserStatusEnum.ACTIVE;
 }

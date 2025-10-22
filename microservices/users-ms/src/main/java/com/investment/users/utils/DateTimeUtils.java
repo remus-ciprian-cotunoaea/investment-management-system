@@ -27,7 +27,7 @@ public final class DateTimeUtils {
      * @since October 20, 2025
      */
     private DateTimeUtils() {
-        throw new IllegalStateException("Utility class");
+        throw new IllegalStateException(Constants.MESSAGE_ERROR_UTILITY);
     }
 
     /**
