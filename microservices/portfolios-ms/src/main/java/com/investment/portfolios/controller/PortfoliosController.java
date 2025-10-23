@@ -14,6 +14,24 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.util.UUID;
 
+
+/**
+ * REST controller that exposes CRUD and query endpoints for portfolios.
+ *
+ * <p>This controller delegates business operations to {@link PortfolioService} and
+ * translates service results into HTTP responses. Endpoints are exposed under
+ * the base path {@code /api/v1/portfolios}.
+ * Responsibilities:
+ * <ul>
+ *   <li>Create, read, update and delete portfolios.</li>
+ *   <li>Query portfolios by user, status and existence by name.</li>
+ * </ul>
+ *
+ * All request payloads are validated using Jakarta Bean Validation where applicable.
+ *
+ * @author Remus-Ciprian Cotunoaea
+ * @since October 22, 2025
+ */
 @RestController
 @RequestMapping("/api/v1/portfolios")
 @RequiredArgsConstructor
@@ -23,6 +41,19 @@ public class PortfoliosController {
 
     // ===== CRUD =====
 
+    /**
+     * Create a new portfolio.
+     *
+     * <p>Validates the incoming {@link PortfolioRequestDto}, delegates creation to the
+     * service and returns a 201 Created response with the created resource in the body
+     * and a Location header pointing to the new resource.
+     *
+     * @param dto the portfolio data to create (validated)
+     * @return ResponseEntity containing the created {@link PortfolioResponseDto} and Location header
+     * @throws jakarta.validation.ConstraintViolationException when validation fails
+     * @author Remus-Ciprian Cotunoaea
+     * @since October 22, 2025
+     */
     @PostMapping
     public ResponseEntity<PortfolioResponseDto> create(@Valid @RequestBody PortfolioRequestDto dto) {
         PortfolioResponseDto created = service.createPortfolio(dto);
@@ -31,33 +62,79 @@ public class PortfoliosController {
                 .body(created);
     }
 
+    /**
+     * Retrieve a portfolio by its identifier.
+     *
+     * @param id the UUID of the portfolio to retrieve
+     * @return 200 OK with the {@link PortfolioResponseDto} when found
+     * @throws com.investment.portfolios.exception.NotFoundException if portfolio is not found
+     * @author Remus-Ciprian Cotunoaea
+     * @since October 22, 2025
+     */
     @GetMapping("/{id}")
     public ResponseEntity<PortfolioResponseDto> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(service.getPortfolioById(id));
     }
 
+    /**
+     * Update an existing portfolio.
+     *
+     * <p>Accepts a validated {@link PortfolioRequestDto} and applies updates to the
+     * portfolio identified by {@code id}. Returns the updated resource.
+     *
+     * @param id  the UUID of the portfolio to update
+     * @param dto the new portfolio data (validated)
+     * @return 200 OK with the updated {@link PortfolioResponseDto}
+     * @throws com.investment.portfolios.exception.NotFoundException if portfolio is not found
+     * @author Remus-Ciprian Cotunoaea
+     * @since October 22, 2025
+     */
     @PutMapping("/{id}")
     public ResponseEntity<PortfolioResponseDto> update(@PathVariable UUID id,
                                                        @Valid @RequestBody PortfolioRequestDto dto) {
         return ResponseEntity.ok(service.updatePortfolio(id, dto));
     }
 
+    /**
+     * Delete a portfolio by its identifier.
+     *
+     * @param id the UUID of the portfolio to delete
+     * @return 204 No Content when deletion succeeds
+     * @throws com.investment.portfolios.exception.NotFoundException if portfolio is not found
+     * @author Remus-Ciprian Cotunoaea
+     * @since October 22, 2025
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         service.deletePortfolio(id);
         return ResponseEntity.noContent().build();
     }
 
-    // ===== Métodos adicionales (repositorio) =====
-
-    // Listar portfolios por usuario
+    /**
+     * Find portfolios belonging to a user with pagination support.
+     *
+     * @param userId   the UUID of the user whose portfolios to retrieve
+     * @param pageable pagination information (page, size, sort)
+     * @return 200 OK with a page of {@link PortfolioResponseDto}
+     * @author Remus-Ciprian Cotunoaea
+     * @since October 22, 2025
+     */
     @GetMapping("/user/{userId}")
     public ResponseEntity<Page<PortfolioResponseDto>> findByUserId(@PathVariable UUID userId,
                                                                    Pageable pageable) {
         return ResponseEntity.ok(service.findByUserId(userId, pageable));
     }
 
-    // Listar portfolios por usuario y status
+    /**
+     * Find portfolios for a user filtered by portfolio status with pagination.
+     *
+     * @param userId   the UUID of the user
+     * @param status   the {@link PortfolioStatusEnum} to filter by
+     * @param pageable pagination information
+     * @return 200 OK with a page of {@link PortfolioResponseDto} matching the status
+     * @author Remus-Ciprian Cotunoaea
+     * @since October 22, 2025
+     */
     @GetMapping("/user/{userId}/status/{status}")
     public ResponseEntity<Page<PortfolioResponseDto>> findByUserIdAndStatus(@PathVariable UUID userId,
                                                                             @PathVariable PortfolioStatusEnum status,
@@ -65,14 +142,31 @@ public class PortfoliosController {
         return ResponseEntity.ok(service.findByUserIdAndStatus(userId, status, pageable));
     }
 
-    // Obtener un portfolio específico por id y userId
+    /**
+     * Find a portfolio by its id and the owning user id.
+     *
+     * @param id     the UUID of the portfolio
+     * @param userId the UUID of the owning user
+     * @return 200 OK with the {@link PortfolioResponseDto} when found
+     * @throws com.investment.portfolios.exception.NotFoundException if not found or not owned by user
+     * @author Remus-Ciprian Cotunoaea
+     * @since October 22, 2025
+     */
     @GetMapping("/{id}/user/{userId}")
     public ResponseEntity<PortfolioResponseDto> findByIdAndUserId(@PathVariable UUID id,
                                                                   @PathVariable UUID userId) {
         return ResponseEntity.ok(service.findByIdAndUserId(id, userId));
     }
 
-    // Validar unicidad de nombre para un usuario
+    /**
+     * Check whether a portfolio with the given name exists for the user (case-insensitive).
+     *
+     * @param userId the UUID of the user
+     * @param name   the portfolio name to check (query parameter)
+     * @return 200 OK with {@code true} if a portfolio with the given name exists for the user, otherwise {@code false}
+     * @author Remus-Ciprian Cotunoaea
+     * @since October 22, 2025
+     */
     @GetMapping("/user/{userId}/exists")
     public ResponseEntity<Boolean> existsByUserIdAndName(@PathVariable UUID userId,
                                                          @RequestParam String name) {

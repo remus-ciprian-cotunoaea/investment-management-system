@@ -24,6 +24,16 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Unit tests for {@link PortfolioServiceImpl}.
+ *
+ * <p>This test class verifies CRUD operations and repository-exposed query methods
+ * implemented by {@code PortfolioServiceImpl}. Each test uses Mockito to stub repository
+ * interactions and asserts the service behavior under both success and failure scenarios.</p>
+ *
+ * @author Remus-Ciprian Cotunoaea
+ * @since October 22, 2025
+ */
 @ExtendWith(MockitoExtension.class)
 class PortfolioServiceImplTest {
 
@@ -35,6 +45,17 @@ class PortfolioServiceImplTest {
 
     // ========= Helpers =========
 
+    /**
+     * Create a {@link PortfolioEntity} helper for tests.
+     *
+     * @param id the portfolio id
+     * @param userId the owner user id
+     * @param name the portfolio name
+     * @param status the portfolio status
+     * @return a populated PortfolioEntity instance
+     * @author Remus-Ciprian Cotunoaea
+     * @since October 22, 2025
+     */
     private PortfolioEntity entity(UUID id, UUID userId, String name, PortfolioStatusEnum status) {
         PortfolioEntity e = new PortfolioEntity();
         e.setId(id);
@@ -44,6 +65,16 @@ class PortfolioServiceImplTest {
         return e;
     }
 
+    /**
+     * Build a {@link PortfolioRequestDto} for creating or updating portfolios in tests.
+     *
+     * @param userId the owner user id
+     * @param name the portfolio name
+     * @param status the portfolio status
+     * @return a PortfolioRequestDto instance
+     * @author Remus-Ciprian Cotunoaea
+     * @since October 22, 2025
+     */
     private PortfolioRequestDto request(UUID userId, String name, PortfolioStatusEnum status) {
         return PortfolioRequestDto.builder()
                 .userId(userId)
@@ -54,6 +85,15 @@ class PortfolioServiceImplTest {
 
     // ========= CRUD =========
 
+    /**
+     * Test that creating a portfolio delegates to the repository and returns the saved entity mapped to DTO.
+     *
+     * <p>Verifies that the returned response contains the expected id, userId, name and status,
+     * and that repository.save(...) was invoked.</p>
+     *
+     * @author Remus-Ciprian Cotunoaea
+     * @since October 22, 2025
+     */
     @Test
     void createPortfolio_ok() {
         UUID id = UUID.randomUUID();
@@ -73,6 +113,12 @@ class PortfolioServiceImplTest {
         verify(repository).save(any(PortfolioEntity.class));
     }
 
+    /**
+     * Test retrieving an existing portfolio by id returns the expected response DTO.
+     *
+     * @author Remus-Ciprian Cotunoaea
+     * @since October 22, 2025
+     */
     @Test
     void getPortfolioById_found() {
         UUID id = UUID.randomUUID();
@@ -87,6 +133,12 @@ class PortfolioServiceImplTest {
         verify(repository).findById(id);
     }
 
+    /**
+     * Test that requesting a non-existing portfolio by id throws {@link NotFoundException}.
+     *
+     * @author Remus-Ciprian Cotunoaea
+     * @since October 22, 2025
+     */
     @Test
     void getPortfolioById_notFound_throws() {
         UUID id = UUID.randomUUID();
@@ -95,6 +147,14 @@ class PortfolioServiceImplTest {
         assertThrows(NotFoundException.class, () -> service.getPortfolioById(id));
     }
 
+    /**
+     * Test updating an existing portfolio applies changes and persists them.
+     *
+     * <p>Verifies that the name and status are updated and repository.save(...) is called.</p>
+     *
+     * @author Remus-Ciprian Cotunoaea
+     * @since October 22, 2025
+     */
     @Test
     void updatePortfolio_ok() {
         UUID id = UUID.randomUUID();
@@ -113,6 +173,12 @@ class PortfolioServiceImplTest {
         verify(repository).save(existing);
     }
 
+    /**
+     * Test deleting an existing portfolio delegates to repository.deleteById after existence check.
+     *
+     * @author Remus-Ciprian Cotunoaea
+     * @since October 22, 2025
+     */
     @Test
     void deletePortfolio_ok() {
         UUID id = UUID.randomUUID();
@@ -124,6 +190,12 @@ class PortfolioServiceImplTest {
         verify(repository).deleteById(id);
     }
 
+    /**
+     * Test that deleting a non-existing portfolio throws {@link NotFoundException} and does not call deleteById.
+     *
+     * @author Remus-Ciprian Cotunoaea
+     * @since October 22, 2025
+     */
     @Test
     void deletePortfolio_notFound_throws() {
         UUID id = UUID.randomUUID();
@@ -134,8 +206,14 @@ class PortfolioServiceImplTest {
         verify(repository, never()).deleteById(any());
     }
 
-    // ========= Métodos del repositorio (expuestos por el service) =========
+    // ========= Repository-exposed methods (via service) =========
 
+    /**
+     * Test paginated retrieval of portfolios for a specific user returns expected page content.
+     *
+     * @author Remus-Ciprian Cotunoaea
+     * @since October 22, 2025
+     */
     @Test
     void findByUserId_ok() {
         UUID userId = UUID.randomUUID();
@@ -152,6 +230,12 @@ class PortfolioServiceImplTest {
         verify(repository).findByUserId(userId, pageable);
     }
 
+    /**
+     * Test paginated retrieval by user and status returns only portfolios matching the status.
+     *
+     * @author Remus-Ciprian Cotunoaea
+     * @since October 22, 2025
+     */
     @Test
     void findByUserIdAndStatus_ok() {
         UUID userId = UUID.randomUUID();
@@ -169,6 +253,12 @@ class PortfolioServiceImplTest {
         verify(repository).findByUserIdAndStatus(userId, PortfolioStatusEnum.ACTIVE, pageable);
     }
 
+    /**
+     * Test finding a portfolio by id and user id returns the matching portfolio.
+     *
+     * @author Remus-Ciprian Cotunoaea
+     * @since October 22, 2025
+     */
     @Test
     void findByIdAndUserId_found() {
         UUID id = UUID.randomUUID();
@@ -182,6 +272,12 @@ class PortfolioServiceImplTest {
         verify(repository).findByIdAndUserId(id, userId);
     }
 
+    /**
+     * Test that finding a portfolio by id and user id that does not exist throws {@link NotFoundException}.
+     *
+     * @author Remus-Ciprian Cotunoaea
+     * @since October 22, 2025
+     */
     @Test
     void findByIdAndUserId_notFound_throws() {
         UUID id = UUID.randomUUID();
@@ -191,6 +287,12 @@ class PortfolioServiceImplTest {
         assertThrows(NotFoundException.class, () -> service.findByIdAndUserId(id, userId));
     }
 
+    /**
+     * Test existence check by user id and name (case-insensitive) returns true when repository reports existence.
+     *
+     * @author Remus-Ciprian Cotunoaea
+     * @since October 22, 2025
+     */
     @Test
     void existsByUserIdAndNameIgnoreCase_true() {
         UUID userId = UUID.randomUUID();
@@ -200,6 +302,12 @@ class PortfolioServiceImplTest {
         verify(repository).existsByUserIdAndNameIgnoreCase(userId, "dup");
     }
 
+    /**
+     * Test existence check by user id and name (case-insensitive) returns false when repository reports non-existence.
+     *
+     * @author Remus-Ciprian Cotunoaea
+     * @since October 22, 2025
+     */
     @Test
     void existsByUserIdAndNameIgnoreCase_false() {
         UUID userId = UUID.randomUUID();
