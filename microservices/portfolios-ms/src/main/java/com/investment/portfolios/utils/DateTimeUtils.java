@@ -21,6 +21,9 @@ public final class DateTimeUtils {
      *
      * <p>If called reflectively, this constructor throws an
      * UnsupportedOperationException.</p>
+     *
+     * @author Remus-Ciprian Cotunoaea
+     * @since October 22, 2025
      */
     private DateTimeUtils() {
 
@@ -33,6 +36,9 @@ public final class DateTimeUtils {
      * @param instant the instant to convert; may be {@code null}
      * @return an {@link OffsetDateTime} representing the same instant in UTC,
      *         or {@code null} if the input instant is {@code null}
+     *
+     * @author Remus-Ciprian Cotunoaea
+     * @since October 22, 2025
      */
     public static OffsetDateTime toOffsetDateTimeUTC(Instant instant) {
         return instant == null ? null : OffsetDateTime.ofInstant(instant, ZoneOffset.UTC);

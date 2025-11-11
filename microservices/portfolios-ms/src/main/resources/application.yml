@@ -1,13 +1,20 @@
 spring:
   application:
     name: portfolios-ms
+  profiles:
+    active: local
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:8080/auth/realms/main/protocol/openid-connect/certs
   jpa:
     show-sql: true
     properties:
       hibernate:
         format_sql: true
     hibernate:
-      ddl-auto: validate   # en común/prod validamos el schema
+      ddl-auto: validate
 
 management:
   endpoints:

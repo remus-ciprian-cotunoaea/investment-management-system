@@ -3,6 +3,7 @@ package com.investment.portfolios.exception;
 import com.investment.common.dto.ApiErrorDto;
 import com.investment.common.exception.BusinessException;
 import com.investment.common.exception.NotFoundException;
+import com.investment.portfolios.utils.Constants;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,7 +48,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorDto> handleNotFound(NotFoundException ex, HttpServletRequest request) {
         ApiErrorDto body = ApiErrorDto.builder()
                 .status(HttpStatus.NOT_FOUND.value())
-                .error("Not Found")
+                .error(Constants.MESSAGE_NOT_FOUND)
                 .message(ex.getMessage())
                 .path(request.getRequestURI())
                 .build();
@@ -70,7 +71,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorDto> handleBusiness(BusinessException ex, HttpServletRequest request) {
         ApiErrorDto body = ApiErrorDto.builder()
                 .status(HttpStatus.BAD_REQUEST.value())
-                .error("Bad Request")
+                .error(Constants.MESSAGE_BAD_REQUEST)
                 .message(ex.getMessage())
                 .path(request.getRequestURI())
                 .build();
@@ -94,7 +95,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorDto> handleGeneric(Exception ex, HttpServletRequest request) {
         ApiErrorDto body = ApiErrorDto.builder()
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .error("Internal Error")
+                .error(Constants.MESSAGE_INTERNAL_ERROR)
                 .message(ex.getMessage())
                 .path(request.getRequestURI())
                 .build();

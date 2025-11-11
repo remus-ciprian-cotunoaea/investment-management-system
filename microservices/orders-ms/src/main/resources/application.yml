@@ -1,6 +1,3 @@
-server:
-  port: ${PORT:8082}
-
 spring:
   application:
     name: orders-ms
@@ -12,7 +9,7 @@ spring:
         format_sql: true
         default_schema: orders
     hibernate:
-      ddl-auto: validate   # en local lo cambiamos a 'update'
+      ddl-auto: validate   # in local change to 'update'
 
 management:
   endpoints:

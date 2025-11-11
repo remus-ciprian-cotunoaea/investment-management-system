@@ -1,5 +1,6 @@
 package com.investment.portfolios.configuration;
 
+import com.investment.portfolios.utils.Constants;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
@@ -8,7 +9,7 @@ import org.springframework.stereotype.Component;
 /**
  * Health indicator for the Portfolios microservice.
  *
- * <p>This component implements Spring Boot's {@link org.springframework.boot.actuate.health.HealthIndicator}
+ * <p>This component implements Spring Boot's {@link HealthIndicator}
  * to provide a simple "up" health status for the service. The returned {@link Health} contains
  * basic metadata that can be exposed by Actuator endpoints (for example, /actuator/health).
  * The health details include:
@@ -40,8 +41,8 @@ public class PortfoliosMsHealthIndicator implements HealthIndicator {
     @Override
     public Health health() {
         return Health.up()
-                .withDetail("service", "portfolios-ms")
-                .withDetail("status", "running")
+                .withDetail(Constants.SERVICE, Constants.MICROSERVICE_NAME)
+                .withDetail(Constants.STATUS, Constants.RUNNING)
                 .build();
     }
 }

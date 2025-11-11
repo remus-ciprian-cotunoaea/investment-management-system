@@ -9,15 +9,53 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Spring Data JPA repository for persisting and querying {@link TradeEntity} records.
+ *
+ * <p>Provides paginated queries to list trades by order or account, and a convenience
+ * method to obtain the most recent trade for a given order.</p>
+ *
+ * <p>Typical usage: inject this repository into service classes to perform read operations
+ * and to enforce ownership/visibility constraints in higher layers.</p>
+ *
+ * @author Remus-Ciprian Cotunoaea
+ * @since November 10, 2025
+ */
 @Repository
 public interface TradeRepository extends JpaRepository<TradeEntity, UUID> {
 
-    // Trades de una orden (paginado)
+    /**
+     * Retrieve a page of trades that belong to the specified order.
+     *
+     * @param orderId  the UUID of the order whose trades should be returned
+     * @param pageable the paging (and optional sorting) parameters
+     * @return a {@link Page} of {@link TradeEntity} for the order
+     *
+     * @author Remus-Ciprian Cotunoaea
+     * @since November 10, 2025
+     */
     Page<TradeEntity> findAllByOrderId(UUID orderId, Pageable pageable);
 
-    // Trades por cuenta (paginado) — útil para el historial del usuario
+    /**
+     * Retrieve a page of trades associated with the specified account.
+     *
+     * @param accountId the UUID of the account whose trades should be returned
+     * @param pageable  the paging (and optional sorting) parameters
+     * @return a {@link Page} of {@link TradeEntity} for the account
+     *
+     * @author Remus-Ciprian Cotunoaea
+     * @since November 10, 2025
+     */
     Page<TradeEntity> findAllByAccountId(UUID accountId, Pageable pageable);
 
-    // Último trade de una orden (para mostrar estado/exec más reciente)
+    /**
+     * Find the most recent trade for the given order, ordered by execution timestamp descending.
+     *
+     * @param orderId the UUID of the order
+     * @return an {@link Optional} containing the latest {@link TradeEntity} if present, otherwise empty
+     *
+     * @author Remus-Ciprian Cotunoaea
+     * @since November 10, 2025
+     */
     Optional<TradeEntity> findTopByOrderIdOrderByExecutedAtDesc(UUID orderId);
 }

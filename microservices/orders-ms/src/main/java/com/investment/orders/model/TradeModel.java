@@ -2,33 +2,37 @@ package com.investment.orders.model;
 
 import com.investment.orders.utils.enums.TradeStatusEnum;
 import lombok.Builder;
-import lombok.Getter;
-import lombok.ToString;
-import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-@Getter
+/**
+ * Immutable record that represents a trade (execution) within the orders' microservice.
+ *
+ * <p>This model carries core trade information used across service and mapping layers:
+ * identifiers linking the trade to instrument, order and account; executed quantity and price;
+ * monetary adjustments (fees, taxes); timestamps for execution and optional settlement date;
+ * and a status enum describing the trade outcome.</p>
+ *
+ * <p>Intended as a lightweight, immutable data carrier between layers (service, repository mappers,
+ * and API mapping). Precision, validation and persistence details are handled elsewhere.</p>
+ *
+ * @author Remus-Ciprian Cotunoaea
+ * @since November 10, 2025
+ */
 @Builder
-@ToString
-@EqualsAndHashCode
-public class TradeModel {
-
-    private final UUID id;                // trade_id (puede ser null antes de persistir)
-    private final UUID instrumentId;
-    private final UUID orderId;
-    private final UUID accountId;
-
-    private final BigDecimal quantity;    // numeric(28,10)
-    private final BigDecimal price;       // numeric(18,6)
-    private final BigDecimal fees;        // numeric(18,6)
-    private final BigDecimal taxes;       // numeric(18,6)
-
-    private final OffsetDateTime executedAt; // timestamptz
-    private final LocalDate settlementDate;   // date (opcional)
-
-    private final TradeStatusEnum status; // EXECUTED, CANCELED, CORRECTED, FAILED, SETTLED, PARTIALLY_SETTLED
-}
+public record TradeModel(
+        UUID id,
+        UUID instrumentId,
+        UUID orderId,
+        UUID accountId,
+        BigDecimal quantity,
+        BigDecimal price,
+        BigDecimal fees,
+        BigDecimal taxes,
+        OffsetDateTime executedAt,
+        LocalDate settlementDate,
+        TradeStatusEnum status
+) {}

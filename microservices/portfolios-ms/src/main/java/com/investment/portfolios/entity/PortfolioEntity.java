@@ -1,5 +1,6 @@
 package com.investment.portfolios.entity;
 
+import com.investment.portfolios.utils.Constants;
 import com.investment.portfolios.utils.enums.PortfolioStatusEnum;
 import jakarta.persistence.*;
 import lombok.*;
@@ -31,37 +32,37 @@ import java.util.UUID;
 @ToString
 @Entity
 @Table(
-        name = "portfolios",
-        schema = "portfolios",
+        name = Constants.PORTFOLIOS_GROUP,
+        schema = Constants.PORTFOLIOS_GROUP,
         uniqueConstraints = {
                 @UniqueConstraint(
-                        name = "uk_portfolios_user_name",
-                        columnNames = {"user_id", "name"}
+                        name = Constants.UNIQUE_CONSTRAINT,
+                        columnNames = {Constants.USER_ID, Constants.PORTFOLIOS_NAME}
                 )
         },
         indexes = {
-                @Index(name = "ix_portfolios_user", columnList = "user_id")
+                @Index(name = Constants.INDEX_PORTFOLIO_USER, columnList = Constants.USER_ID)
         }
 )
 public class PortfolioEntity implements Serializable {
 
     @Id
     @GeneratedValue
-    @Column(name = "id", nullable = false, updatable = false, columnDefinition = "uuid")
+    @Column(name = Constants.PORTFOLIOS_ID, nullable = false, updatable = false, columnDefinition = Constants.UUID)
     private UUID id;
 
-    @Column(name = "user_id", nullable = false, columnDefinition = "uuid")
+    @Column(name = Constants.USER_ID, nullable = false, columnDefinition = Constants.UUID)
     private UUID userId;
 
-    @Column(name = "name", nullable = false, length = 100)
+    @Column(name = Constants.PORTFOLIOS_NAME, nullable = false, length = Constants.HUNDRED)
     private String name;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 20)
+    @Column(name = Constants.STATUS, nullable = false, length = Constants.TWENTY)
     @Builder.Default
     private PortfolioStatusEnum status = PortfolioStatusEnum.ACTIVE;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = Constants.CREATED_AT, nullable = false, updatable = false)
     private Instant createdAt;
 
     /**

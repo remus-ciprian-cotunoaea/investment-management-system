@@ -1,8 +1,10 @@
-package com.investment.orders.service;
+package com.investment.orders.service.impl;
 
 import com.investment.orders.configuration.OrdersTopicsProps;
 import com.investment.orders.dto.ExecutionResponseDto;
 import com.investment.orders.dto.OrderResponseDto;
+import com.investment.orders.service.KafkaProducer;
+import com.investment.orders.utils.Constants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -22,22 +24,20 @@ public class KafkaProducerImpl implements KafkaProducer {
 
     @Override
     public void publishOrderCreated(OrderResponseDto payload) {
-        // la clave debe ser el ID de la orden ya guardada
-        String key = requireKey(payload.getId(), "OrderResponseDto.id");
-        log.info("Publishing order-created | key={} | topic={}", key, topics.getOrderCreated());
+        String key = requireKey(payload.getId(), Constants.KAFKA_ORDER_RESPONSE_ID);
+        log.info(Constants.PUBLISHING_ORDER_CREATED, key, topics.getOrderCreated());
         kafkaTemplate.send(topics.getOrderCreated(), key, payload);
     }
 
     @Override
     public void publishTradeExecuted(ExecutionResponseDto payload) {
-        // ideal: particionar por orderId (mantiene todos los trades de la misma orden juntos)
         UUID chosen = Optional.ofNullable(payload.getOrderId()).orElse(payload.getId());
-        String key = requireKey(chosen, "ExecutionResponseDto.orderId/id");
-        log.info("Publishing trade-executed | key={} | topic={}", key, topics.getTradeExecuted());
+        String key = requireKey(chosen, Constants.KAFKA_EXECUTION_RESPONSE_ID);
+        log.info(Constants.PUBLISHING_TRADE_EXECUTED, key, topics.getTradeExecuted());
         kafkaTemplate.send(topics.getTradeExecuted(), key, payload);
     }
 
     private static String requireKey(UUID id, String fieldName) {
-        return Objects.requireNonNull(id, fieldName + " must not be null").toString();
+        return Objects.requireNonNull(id, fieldName + Constants.NOT_NULL).toString();
     }
 }

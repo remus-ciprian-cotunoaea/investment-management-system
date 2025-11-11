@@ -1,5 +1,6 @@
 package com.investment.portfolios.configuration;
 
+import com.investment.portfolios.utils.Constants;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -53,13 +54,13 @@ public class SecurityConfig {
                 // Authorization rules
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/actuator/health",
-                                "/actuator/info",
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html"
+                                Constants.HEALTH_CHECK_PATH,
+                                Constants.HEALTH_INFO,
+                                Constants.API_DOCS_VERSION_THREE,
+                                Constants.SWAGGER_TWO,
+                                Constants.SWAGGER_ONE
                         ).permitAll()
-                        .requestMatchers("/api/**").authenticated()
+                        .requestMatchers(Constants.API).authenticated()
                         .anyRequest().denyAll()
                 )
                 // Resource Server (JWT)

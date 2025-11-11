@@ -28,7 +28,7 @@ public class PortfoliosMsApplication {
     /**
      * Application entry point.
      *
-     * <p>Delegates to {@link org.springframework.boot.SpringApplication#run(Class, String[])}
+     * <p>Delegates to {@link SpringApplication#run(Class, String[])}
      * to launch the Spring Boot application. Any command-line arguments passed to the JVM
      * are forwarded to the application and can be used for externalized configuration or
      * conditional startup behavior.

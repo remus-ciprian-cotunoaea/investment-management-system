@@ -9,6 +9,16 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+/**
+ * Response Data Transfer Object representing an order returned by the service/API.
+ *
+ * <p>This DTO contains identifying information (IDs), order attributes (side, type),
+ * quantity/limit price, status, timestamp when the order was placed, and an optional note.
+ * It is used to present order data to callers (for example REST API responses).</p>
+ *
+ * @author Remus-Ciprian Cotunoaea
+ * @since November 10, 2025
+ */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -28,6 +38,6 @@ public class OrderResponseDto {
 
     private OrderStatusEnum status;
 
-    private OffsetDateTime placedAt;      // timestamptz
+    private OffsetDateTime placedAt;      // timestamp
     private String note;
 }

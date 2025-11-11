@@ -1,5 +1,6 @@
 package com.investment.portfolios.configuration;
 
+import com.investment.portfolios.utils.Constants;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import org.springframework.context.annotation.Bean;
@@ -8,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Spring configuration that exposes an OpenAPI (Swagger) definition for the Portfolios microservice.
  *
- * <p>This configuration provides a pre-configured {@link io.swagger.v3.oas.models.OpenAPI} bean
+ * <p>This configuration provides a pre-configured {@link OpenAPI} bean
  * containing basic API metadata such as title, version and description. The API version is
  * resolved at runtime by attempting to read the {@code Implementation-Version} entry from the
  * package MANIFEST; if not available, a default snapshot version is returned.
@@ -39,9 +40,9 @@ public class OpenApiConfig {
     public OpenAPI portfoliosOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Portfolios MS API")
+                        .title(Constants.OPEN_API_TITLE_INFO)
                         .version(resolveVersion())
-                        .description("REST API for Portfolios microservice"));
+                        .description(Constants.OPEN_API_DESCRIPTION_INFO));
     }
 
     /**
@@ -59,9 +60,8 @@ public class OpenApiConfig {
      * @since October 22, 2025
      */
     private String resolveVersion() {
-        // Read Implementation-Version from MANIFEST if available; fallback to SNAPSHOT
         Package pkg = this.getClass().getPackage();
         String v = (pkg != null) ? pkg.getImplementationVersion() : null;
-        return (v != null && !v.isBlank()) ? v : "1.0.0-SNAPSHOT";
+        return (v != null && !v.isBlank()) ? v : Constants.PORTFOLIOS_VERSION;
     }
 }

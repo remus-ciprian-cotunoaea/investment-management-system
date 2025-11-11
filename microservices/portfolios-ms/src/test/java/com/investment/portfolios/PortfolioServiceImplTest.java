@@ -1,15 +1,16 @@
 package com.investment.portfolios;
 
+import com.investment.common.exception.BadRequestException;
 import com.investment.portfolios.dto.PortfolioRequestDto;
 import com.investment.portfolios.dto.PortfolioResponseDto;
 import com.investment.portfolios.entity.PortfolioEntity;
-import com.investment.portfolios.service.PortfolioServiceImpl;
-import com.investment.portfolios.utils.enums.PortfolioStatusEnum;
 import com.investment.portfolios.exception.NotFoundException;
 import com.investment.portfolios.repository.PortfolioRepository;
+import com.investment.portfolios.service.impl.PortfolioServiceImpl;
+import com.investment.portfolios.utils.enums.PortfolioStatusEnum;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
@@ -17,22 +18,28 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link PortfolioServiceImpl}.
- *
- * <p>This test class verifies CRUD operations and repository-exposed query methods
- * implemented by {@code PortfolioServiceImpl}. Each test uses Mockito to stub repository
- * interactions and asserts the service behavior under both success and failure scenarios.</p>
+ * <p>
+ * These tests exercise the CRUD operations, paginated queries, ownership-aware retrieval,
+ * and existence checks implemented by the service. The {@link PortfolioRepository} is mocked
+ * using Mockito to simulate persistence behaviors and to verify repository interactions.
+ * <p>
+ * Test naming follows the pattern: scenario_expectedBehavior.
  *
  * @author Remus-Ciprian Cotunoaea
- * @since October 22, 2025
+ * @since November 7, 2025
  */
 @ExtendWith(MockitoExtension.class)
 class PortfolioServiceImplTest {
@@ -40,280 +47,344 @@ class PortfolioServiceImplTest {
     @Mock
     private PortfolioRepository repository;
 
-    @InjectMocks
     private PortfolioServiceImpl service;
 
-    // ========= Helpers =========
+    // ====== datos comunes ======
+    private final UUID userId = UUID.randomUUID();
+    private final UUID portfolioId = UUID.randomUUID();
+    private final Instant now = Instant.now();
 
     /**
-     * Create a {@link PortfolioEntity} helper for tests.
+     * Initialize the service under test before each test execution.
+     * <p>
+     * The repository is injected as a mock so tests can control repository behavior.
      *
-     * @param id the portfolio id
-     * @param userId the owner user id
-     * @param name the portfolio name
-     * @param status the portfolio status
-     * @return a populated PortfolioEntity instance
+     * @since November 7, 2025
      * @author Remus-Ciprian Cotunoaea
-     * @since October 22, 2025
      */
-    private PortfolioEntity entity(UUID id, UUID userId, String name, PortfolioStatusEnum status) {
-        PortfolioEntity e = new PortfolioEntity();
-        e.setId(id);
+    @BeforeEach
+    void setUp() {
+        service = new PortfolioServiceImpl(repository);
+    }
+
+    /**
+     * Helper that builds a sample {@link PortfolioEntity} used by tests.
+     * <p>
+     * The returned entity has preset id, userId and createdAt fields so assertions can rely on stable values.
+     *
+     * @param name   the portfolio name
+     * @param status the portfolio status
+     * @return a pre-populated PortfolioEntity for test usage
+     *
+     * @since November 7, 2025
+     * @author Remus-Ciprian Cotunoaea
+     */
+    private PortfolioEntity entity(String name, PortfolioStatusEnum status) {
+        var e = new PortfolioEntity();
+        e.setId(portfolioId);
         e.setUserId(userId);
         e.setName(name);
         e.setStatus(status);
+        e.setCreatedAt(now);
         return e;
     }
 
     /**
-     * Build a {@link PortfolioRequestDto} for creating or updating portfolios in tests.
+     * Helper that builds a sample {@link PortfolioRequestDto} used by tests.
+     * <p>
+     * This method uses setters (compatible with Lombok @Data DTOs) to populate the DTO.
      *
-     * @param userId the owner user id
-     * @param name the portfolio name
-     * @param status the portfolio status
-     * @return a PortfolioRequestDto instance
+     * @param name the portfolio name to request
+     * @return a populated PortfolioRequestDto ready to be passed to service methods
+     *
+     * @since November 7, 2025
      * @author Remus-Ciprian Cotunoaea
-     * @since October 22, 2025
      */
-    private PortfolioRequestDto request(UUID userId, String name, PortfolioStatusEnum status) {
-        return PortfolioRequestDto.builder()
-                .userId(userId)
-                .name(name)
-                .status(status)
-                .build();
+    private PortfolioRequestDto request(String name) {
+        // si tu DTO es Lombok @Data (sin constructor), usa setters;
+        // si no, cámbialo por builder/constructor real de tu clase.
+        var dto = new PortfolioRequestDto();
+        dto.setUserId(userId);
+        dto.setName(name);
+        dto.setStatus(PortfolioStatusEnum.ACTIVE);
+        return dto;
     }
 
-    // ========= CRUD =========
+    // ====== CRUD ======
 
     /**
-     * Test that creating a portfolio delegates to the repository and returns the saved entity mapped to DTO.
+     * Verifies that creating a portfolio results in persisting an entity and mapping it back to a response DTO.
+     * <p>
+     * - Mocks repository.save(...) to simulate database assignment of id when missing.
+     * - Asserts returned DTO fields match expected values and repository.
      *
-     * <p>Verifies that the returned response contains the expected id, userId, name and status,
-     * and that repository.save(...) was invoked.</p>
-     *
+     * @since November 7, 2025
      * @author Remus-Ciprian Cotunoaea
-     * @since October 22, 2025
      */
     @Test
-    void createPortfolio_ok() {
-        UUID id = UUID.randomUUID();
-        UUID userId = UUID.randomUUID();
-        var dto = request(userId, "Growth", PortfolioStatusEnum.ACTIVE);
+    void createPortfolio_persistsAndMaps() {
+        var dto = request("Alpha");
+        // el service crea la Entity desde un Model; nosotros devolvemos "entity persistida"
+        when(repository.save(any(PortfolioEntity.class))).thenAnswer(inv -> {
+            PortfolioEntity in = inv.getArgument(0);
+            // simula que la DB asigna el mismo id (o uno nuevo); dejamos el mismo para aserciones
+            if (in.getId() == null) in.setId(portfolioId);
+            return in;
+        });
 
-        // lo que repo guarda no importa, devolvemos una entidad con ID
-        when(repository.save(any(PortfolioEntity.class)))
-                .thenReturn(entity(id, userId, "Growth", PortfolioStatusEnum.ACTIVE));
+        PortfolioResponseDto resp = service.createPortfolio(dto);
 
-        PortfolioResponseDto r = service.createPortfolio(dto);
+        assertThat(resp.getId()).isNotNull();
+        assertThat(resp.getUserId()).isEqualTo(userId);
+        assertThat(resp.getName()).isEqualTo("Alpha");
+        assertThat(resp.getStatus()).isEqualTo(PortfolioStatusEnum.ACTIVE);
 
-        assertEquals(id, r.getId());
-        assertEquals(userId, r.getUserId());
-        assertEquals("Growth", r.getName());
-        assertEquals(PortfolioStatusEnum.ACTIVE, r.getStatus());
         verify(repository).save(any(PortfolioEntity.class));
+        verifyNoMoreInteractions(repository);
     }
 
     /**
-     * Test retrieving an existing portfolio by id returns the expected response DTO.
+     * Verifies that getPortfolioById returns a mapped DTO when the repository finds the entity.
      *
+     * @since November 7, 2025
      * @author Remus-Ciprian Cotunoaea
-     * @since October 22, 2025
      */
     @Test
-    void getPortfolioById_found() {
-        UUID id = UUID.randomUUID();
-        UUID userId = UUID.randomUUID();
-        when(repository.findById(id))
-                .thenReturn(Optional.of(entity(id, userId, "P1", PortfolioStatusEnum.ACTIVE)));
+    void getPortfolioById_found_returnsMappedDto() {
+        when(repository.findById(eq(portfolioId))).thenReturn(Optional.of(entity("X", PortfolioStatusEnum.ACTIVE)));
 
-        PortfolioResponseDto r = service.getPortfolioById(id);
+        PortfolioResponseDto resp = service.getPortfolioById(portfolioId);
 
-        assertEquals(id, r.getId());
-        assertEquals("P1", r.getName());
-        verify(repository).findById(id);
+        assertThat(resp.getId()).isEqualTo(portfolioId);
+        assertThat(resp.getStatus()).isEqualTo(PortfolioStatusEnum.ACTIVE);
+
+        verify(repository).findById(portfolioId);
+        verifyNoMoreInteractions(repository);
     }
 
     /**
-     * Test that requesting a non-existing portfolio by id throws {@link NotFoundException}.
+     * Verifies that getPortfolioById throws {@link NotFoundException} when the entity is absent.
      *
+     * @since November 7, 2025
      * @author Remus-Ciprian Cotunoaea
-     * @since October 22, 2025
      */
     @Test
-    void getPortfolioById_notFound_throws() {
-        UUID id = UUID.randomUUID();
-        when(repository.findById(id)).thenReturn(Optional.empty());
+    void getPortfolioById_notFound_throwsNotFound() {
+        when(repository.findById(eq(portfolioId))).thenReturn(Optional.empty());
 
-        assertThrows(NotFoundException.class, () -> service.getPortfolioById(id));
+        assertThrows(NotFoundException.class, () -> service.getPortfolioById(portfolioId));
+
+        verify(repository).findById(portfolioId);
+        verifyNoMoreInteractions(repository);
     }
 
     /**
-     * Test updating an existing portfolio applies changes and persists them.
+     * Verifies updatePortfolio updates mutable fields (name, status) and persists changes.
+     * <p>
+     * - Mocks findById to return an existing entity.
+     * - Mocks save to return the passed entity.
+     * - Asserts returned DTO reflects updated values.
      *
-     * <p>Verifies that the name and status are updated and repository.save(...) is called.</p>
-     *
+     * @since November 7, 2025
      * @author Remus-Ciprian Cotunoaea
-     * @since October 22, 2025
      */
     @Test
-    void updatePortfolio_ok() {
-        UUID id = UUID.randomUUID();
-        UUID userId = UUID.randomUUID();
-        var existing = entity(id, userId, "Old", PortfolioStatusEnum.ACTIVE);
-        var dto = request(userId, "New", PortfolioStatusEnum.INACTIVE);
+    void updatePortfolio_updatesNameAndStatus() {
+        var existing = entity("Old", PortfolioStatusEnum.INACTIVE);
+        when(repository.findById(eq(portfolioId))).thenReturn(Optional.of(existing));
+        when(repository.save(any(PortfolioEntity.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        when(repository.findById(id)).thenReturn(Optional.of(existing));
-        when(repository.save(existing)).thenReturn(existing); // save devuelve el mismo para este test
+        var dto = request("New");
 
-        PortfolioResponseDto r = service.updatePortfolio(id, dto);
+        PortfolioResponseDto resp = service.updatePortfolio(portfolioId, dto);
 
-        assertEquals("New", r.getName());
-        assertEquals(PortfolioStatusEnum.INACTIVE, r.getStatus());
-        verify(repository).findById(id);
-        verify(repository).save(existing);
+        assertThat(resp.getName()).isEqualTo("New");
+        assertThat(resp.getStatus()).isEqualTo(PortfolioStatusEnum.ACTIVE);
+
+        verify(repository).findById(portfolioId);
+        verify(repository).save(any(PortfolioEntity.class));
+        verifyNoMoreInteractions(repository);
     }
 
     /**
-     * Test deleting an existing portfolio delegates to repository.deleteById after existence check.
+     * Verifies updatePortfolio throws {@link NotFoundException} if the target entity does not exist.
      *
+     * @since November 7, 2025
      * @author Remus-Ciprian Cotunoaea
-     * @since October 22, 2025
      */
     @Test
-    void deletePortfolio_ok() {
-        UUID id = UUID.randomUUID();
-        when(repository.existsById(id)).thenReturn(true);
+    void updatePortfolio_notFound_throwsNotFound() {
+        when(repository.findById(eq(portfolioId))).thenReturn(Optional.empty());
 
-        service.deletePortfolio(id);
+        assertThrows(NotFoundException.class, () -> service.updatePortfolio(portfolioId, request("New")));
 
-        verify(repository).existsById(id);
-        verify(repository).deleteById(id);
+        verify(repository).findById(portfolioId);
+        verifyNoMoreInteractions(repository);
     }
 
     /**
-     * Test that deleting a non-existing portfolio throws {@link NotFoundException} and does not call deleteById.
+     * Verifies deletePortfolio deletes an existing entity by id.
+     * <p>
+     * - Mocks existsById to return true and ensures deleteById is called.
      *
+     * @since November 7, 2025
      * @author Remus-Ciprian Cotunoaea
-     * @since October 22, 2025
      */
     @Test
-    void deletePortfolio_notFound_throws() {
-        UUID id = UUID.randomUUID();
-        when(repository.existsById(id)).thenReturn(false);
+    void deletePortfolio_exists_deletes() {
+        when(repository.existsById(eq(portfolioId))).thenReturn(true);
 
-        assertThrows(NotFoundException.class, () -> service.deletePortfolio(id));
-        verify(repository).existsById(id);
-        verify(repository, never()).deleteById(any());
+        service.deletePortfolio(portfolioId);
+
+        verify(repository).existsById(portfolioId);
+        verify(repository).deleteById(portfolioId);
+        verifyNoMoreInteractions(repository);
     }
 
-    // ========= Repository-exposed methods (via service) =========
-
     /**
-     * Test paginated retrieval of portfolios for a specific user returns expected page content.
+     * Verifies deletePortfolio throws {@link NotFoundException} when the entity does not exist.
      *
+     * @since November 7, 2025
      * @author Remus-Ciprian Cotunoaea
-     * @since October 22, 2025
      */
     @Test
-    void findByUserId_ok() {
-        UUID userId = UUID.randomUUID();
-        Pageable pageable = PageRequest.of(0, 2);
-        var e1 = entity(UUID.randomUUID(), userId, "A", PortfolioStatusEnum.ACTIVE);
-        var e2 = entity(UUID.randomUUID(), userId, "B", PortfolioStatusEnum.INACTIVE);
-        when(repository.findByUserId(userId, pageable))
-                .thenReturn(new PageImpl<>(List.of(e1, e2), pageable, 2));
+    void deletePortfolio_notExists_throwsNotFound() {
+        when(repository.existsById(eq(portfolioId))).thenReturn(false);
 
-        Page<PortfolioResponseDto> page = service.findByUserId(userId, pageable);
+        assertThrows(NotFoundException.class, () -> service.deletePortfolio(portfolioId));
 
-        assertEquals(2, page.getTotalElements());
-        assertEquals("A", page.getContent().getFirst().getName());
+        verify(repository).existsById(portfolioId);
+        verifyNoMoreInteractions(repository);
+    }
+
+    // ====== Queries con paginación ======
+
+    /**
+     * Verifies findByUserId maps repository page content to response DTOs when page parameters are valid.
+     *
+     * @since November 7, 2025
+     * @author Remus-Ciprian Cotunoaea
+     */
+    @Test
+    void findByUserId_validPage_mapsEntities() {
+        Pageable pageable = PageRequest.of(1, 10); // válido (pageNumber >= 1)
+        PortfolioEntity e = entity("A", PortfolioStatusEnum.ACTIVE);
+        Page<PortfolioEntity> page = new PageImpl<>(List.of(e), pageable, 1);
+
+        when(repository.findByUserId(eq(userId), eq(pageable))).thenReturn(page);
+
+        Page<PortfolioResponseDto> resp = service.findByUserId(userId, pageable);
+
+        assertThat(resp.getContent()).hasSize(1);
+        assertThat(resp.getContent().getFirst().getId()).isEqualTo(portfolioId);
+        assertThat(resp.getContent().getFirst().getStatus()).isEqualTo(PortfolioStatusEnum.ACTIVE);
+
         verify(repository).findByUserId(userId, pageable);
+        verifyNoMoreInteractions(repository);
     }
 
     /**
-     * Test paginated retrieval by user and status returns only portfolios matching the status.
+     * Verifies findByUserId throws {@link BadRequestException} when pageable is invalid (e.g. page size == 0).
+     * <p>
+     * This test mocks a bad Pageable to trigger validation logic inside the service without constructing
+     * an actual PageRequest that would raise IllegalArgumentException earlier.
      *
+     * @since November 7, 2025
      * @author Remus-Ciprian Cotunoaea
-     * @since October 22, 2025
      */
     @Test
-    void findByUserIdAndStatus_ok() {
-        UUID userId = UUID.randomUUID();
-        Pageable pageable = PageRequest.of(0, 1);
-        var e1 = entity(UUID.randomUUID(), userId, "OnlyActive", PortfolioStatusEnum.ACTIVE);
+    void findByUserId_invalidPage_throwsBadRequest() {
+        // No usar PageRequest.of(..., 0) -> lanzaría IllegalArgumentException fuera del service
+        Pageable bad = mock(Pageable.class);
+        when(bad.getPageSize()).thenReturn(0); // dispara NumberUtils.isNullOrZero
 
-        when(repository.findByUserIdAndStatus(userId, PortfolioStatusEnum.ACTIVE, pageable))
-                .thenReturn(new PageImpl<>(List.of(e1), pageable, 1));
+        assertThrows(BadRequestException.class, () -> service.findByUserId(userId, bad));
 
-        Page<PortfolioResponseDto> page =
-                service.findByUserIdAndStatus(userId, PortfolioStatusEnum.ACTIVE, pageable);
-
-        assertEquals(1, page.getTotalElements());
-        assertEquals(PortfolioStatusEnum.ACTIVE, page.getContent().getFirst().getStatus());
-        verify(repository).findByUserIdAndStatus(userId, PortfolioStatusEnum.ACTIVE, pageable);
+        verifyNoInteractions(repository);
     }
 
     /**
-     * Test finding a portfolio by id and user id returns the matching portfolio.
+     * Verifies findByUserIdAndStatus maps repository results to DTOs for a valid pageable and status filter.
      *
+     * @since November 7, 2025
      * @author Remus-Ciprian Cotunoaea
-     * @since October 22, 2025
      */
     @Test
-    void findByIdAndUserId_found() {
-        UUID id = UUID.randomUUID();
-        UUID userId = UUID.randomUUID();
-        var e = entity(id, userId, "Mine", PortfolioStatusEnum.ACTIVE);
-        when(repository.findByIdAndUserId(id, userId)).thenReturn(Optional.of(e));
+    void findByUserIdAndStatus_validPage_mapsEntities() {
+        Pageable pageable = PageRequest.of(2, 5);
+        PortfolioEntity e = entity("Q", PortfolioStatusEnum.INACTIVE);
+        Page<PortfolioEntity> page = new PageImpl<>(List.of(e), pageable, 1);
 
-        PortfolioResponseDto r = service.findByIdAndUserId(id, userId);
+        when(repository.findByUserIdAndStatus(eq(userId), eq(PortfolioStatusEnum.INACTIVE), eq(pageable)))
+                .thenReturn(page);
 
-        assertEquals("Mine", r.getName());
-        verify(repository).findByIdAndUserId(id, userId);
+        Page<PortfolioResponseDto> resp =
+                service.findByUserIdAndStatus(userId, PortfolioStatusEnum.INACTIVE, pageable);
+
+        assertThat(resp.getContent()).hasSize(1);
+        assertThat(resp.getContent().getFirst().getId()).isEqualTo(portfolioId);
+        assertThat(resp.getContent().getFirst().getStatus()).isEqualTo(PortfolioStatusEnum.INACTIVE);
+
+        verify(repository).findByUserIdAndStatus(userId, PortfolioStatusEnum.INACTIVE, pageable);
+        verifyNoMoreInteractions(repository);
+    }
+
+    // ====== Get ownership-aware ======
+
+    /**
+     * Verifies findByIdAndUserId returns the DTO when the repository finds an entity matching both id and userId.
+     * <p>
+     * This ensures ownership checks in the service are correctly delegating to the repository and mapping results.
+     *
+     * @since November 7, 2025
+     * @author Remus-Ciprian Cotunoaea
+     */
+    @Test
+    void findByIdAndUserId_found_returnsMappedDto() {
+        when(repository.findByIdAndUserId(eq(portfolioId), eq(userId)))
+                .thenReturn(Optional.of(entity("Z", PortfolioStatusEnum.ACTIVE)));
+
+        PortfolioResponseDto resp = service.findByIdAndUserId(portfolioId, userId);
+
+        assertThat(resp.getId()).isEqualTo(portfolioId);
+        assertThat(resp.getUserId()).isEqualTo(userId);
+
+        verify(repository).findByIdAndUserId(portfolioId, userId);
+        verifyNoMoreInteractions(repository);
     }
 
     /**
-     * Test that finding a portfolio by id and user id that does not exist throws {@link NotFoundException}.
+     * Verifies findByIdAndUserId throws {@link NotFoundException} when no matching entity is found.
      *
+     * @since November 7, 2025
      * @author Remus-Ciprian Cotunoaea
-     * @since October 22, 2025
      */
     @Test
-    void findByIdAndUserId_notFound_throws() {
-        UUID id = UUID.randomUUID();
-        UUID userId = UUID.randomUUID();
-        when(repository.findByIdAndUserId(id, userId)).thenReturn(Optional.empty());
+    void findByIdAndUserId_notFound_throwsNotFound() {
+        when(repository.findByIdAndUserId(eq(portfolioId), eq(userId))).thenReturn(Optional.empty());
 
-        assertThrows(NotFoundException.class, () -> service.findByIdAndUserId(id, userId));
+        assertThrows(NotFoundException.class, () -> service.findByIdAndUserId(portfolioId, userId));
+
+        verify(repository).findByIdAndUserId(portfolioId, userId);
+        verifyNoMoreInteractions(repository);
     }
 
-    /**
-     * Test existence check by user id and name (case-insensitive) returns true when repository reports existence.
-     *
-     * @author Remus-Ciprian Cotunoaea
-     * @since October 22, 2025
-     */
-    @Test
-    void existsByUserIdAndNameIgnoreCase_true() {
-        UUID userId = UUID.randomUUID();
-        when(repository.existsByUserIdAndNameIgnoreCase(userId, "dup")).thenReturn(true);
-
-        assertTrue(service.existsByUserIdAndNameIgnoreCase(userId, "dup"));
-        verify(repository).existsByUserIdAndNameIgnoreCase(userId, "dup");
-    }
+    // ====== Exists ======
 
     /**
-     * Test existence check by user id and name (case-insensitive) returns false when repository reports non-existence.
+     * Verifies existsByUserIdAndNameIgnoreCase delegates to the repository and returns the correct boolean result.
      *
+     * @since November 7, 2025
      * @author Remus-Ciprian Cotunoaea
-     * @since October 22, 2025
      */
     @Test
-    void existsByUserIdAndNameIgnoreCase_false() {
-        UUID userId = UUID.randomUUID();
-        when(repository.existsByUserIdAndNameIgnoreCase(userId, "free")).thenReturn(false);
+    void existsByUserIdAndNameIgnoreCase_delegatesToRepo() {
+        when(repository.existsByUserIdAndNameIgnoreCase(eq(userId), eq("alpha"))).thenReturn(true);
 
-        assertFalse(service.existsByUserIdAndNameIgnoreCase(userId, "free"));
-        verify(repository).existsByUserIdAndNameIgnoreCase(userId, "free");
+        boolean exists = service.existsByUserIdAndNameIgnoreCase(userId, "alpha");
+
+        assertThat(exists).isTrue();
+        verify(repository).existsByUserIdAndNameIgnoreCase(userId, "alpha");
+        verifyNoMoreInteractions(repository);
     }
 }

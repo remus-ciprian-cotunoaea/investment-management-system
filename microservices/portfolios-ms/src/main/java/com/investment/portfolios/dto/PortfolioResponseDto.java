@@ -3,6 +3,7 @@ package com.investment.portfolios.dto;
 import com.investment.portfolios.utils.enums.PortfolioStatusEnum;
 import lombok.*;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 /**
@@ -29,4 +30,5 @@ public class PortfolioResponseDto {
     private UUID userId;
     private String name;
     private PortfolioStatusEnum status;
+    private OffsetDateTime createdAt;
 }

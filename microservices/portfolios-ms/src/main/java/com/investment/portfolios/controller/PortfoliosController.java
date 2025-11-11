@@ -2,9 +2,11 @@ package com.investment.portfolios.controller;
 
 import com.investment.portfolios.dto.PortfolioRequestDto;
 import com.investment.portfolios.dto.PortfolioResponseDto;
+import com.investment.portfolios.utils.Constants;
 import com.investment.portfolios.utils.enums.PortfolioStatusEnum;
 import com.investment.portfolios.service.PortfolioService;
 import jakarta.validation.Valid;
+import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -33,7 +35,7 @@ import java.util.UUID;
  * @since October 22, 2025
  */
 @RestController
-@RequestMapping("/api/v1/portfolios")
+@RequestMapping(Constants.PORTFOLIOS_BASE_PATH)
 @RequiredArgsConstructor
 public class PortfoliosController {
 
@@ -50,7 +52,7 @@ public class PortfoliosController {
      *
      * @param dto the portfolio data to create (validated)
      * @return ResponseEntity containing the created {@link PortfolioResponseDto} and Location header
-     * @throws jakarta.validation.ConstraintViolationException when validation fails
+     * @throws ConstraintViolationException when validation fails
      * @author Remus-Ciprian Cotunoaea
      * @since October 22, 2025
      */
@@ -58,7 +60,7 @@ public class PortfoliosController {
     public ResponseEntity<PortfolioResponseDto> create(@Valid @RequestBody PortfolioRequestDto dto) {
         PortfolioResponseDto created = service.createPortfolio(dto);
         return ResponseEntity
-                .created(URI.create("/api/v1/portfolios/" + created.getId()))
+                .created(URI.create(Constants.PORTFOLIOS_BASE_PATH + created.getId()))
                 .body(created);
     }
 
@@ -67,7 +69,7 @@ public class PortfoliosController {
      *
      * @param id the UUID of the portfolio to retrieve
      * @return 200 OK with the {@link PortfolioResponseDto} when found
-     * @throws com.investment.portfolios.exception.NotFoundException if portfolio is not found
+     *
      * @author Remus-Ciprian Cotunoaea
      * @since October 22, 2025
      */
@@ -85,7 +87,7 @@ public class PortfoliosController {
      * @param id  the UUID of the portfolio to update
      * @param dto the new portfolio data (validated)
      * @return 200 OK with the updated {@link PortfolioResponseDto}
-     * @throws com.investment.portfolios.exception.NotFoundException if portfolio is not found
+     *
      * @author Remus-Ciprian Cotunoaea
      * @since October 22, 2025
      */
@@ -100,7 +102,7 @@ public class PortfoliosController {
      *
      * @param id the UUID of the portfolio to delete
      * @return 204 No Content when deletion succeeds
-     * @throws com.investment.portfolios.exception.NotFoundException if portfolio is not found
+     *
      * @author Remus-Ciprian Cotunoaea
      * @since October 22, 2025
      */
@@ -148,7 +150,7 @@ public class PortfoliosController {
      * @param id     the UUID of the portfolio
      * @param userId the UUID of the owning user
      * @return 200 OK with the {@link PortfolioResponseDto} when found
-     * @throws com.investment.portfolios.exception.NotFoundException if not found or not owned by user
+     *
      * @author Remus-Ciprian Cotunoaea
      * @since October 22, 2025
      */
